@@ -1,4 +1,4 @@
-import { callGeminiJson, GeminiUnavailableError } from "./gemini";
+import { callGeminiJson, streamGeminiText, GeminiUnavailableError } from "./gemini";
 
 interface ScriptSection {
   text: string;
@@ -71,6 +71,31 @@ export async function generateUGCScript(input: UGCScriptInput): Promise<UGCScrip
     });
   } catch (error) {
     if (error instanceof GeminiUnavailableError) return FALLBACK;
+    throw error;
+  }
+}
+
+function scriptPrompt(input: UGCScriptInput): string {
+  const facts = `${input.name} | R$${input.priceBR ?? "?"} | comissão R$${input.commissionValueBR ?? "?"} | ${input.ratingBR ?? "?"}★ | ${input.soldCountBR ?? "?"} vendidos`;
+  return `Roteiro UGC 30-35s para afiliado TikTok Shop BR, avatar não aparece (só mãos/reação), tom natural de indicação, CTA no fim. Produto: ${facts}. Escreva em texto corrido (não JSON) com as seções HOOK (0-3s), PROBLEMA (3-8s), PRODUTO (8-18s), PROVA (18-28s) e CTA (28-35s), cada uma com o texto a ser falado.`;
+}
+
+/**
+ * Mesmo roteiro de `generateUGCScript`, mas em streaming — pensado para o
+ * endpoint GET /products/:id/script mostrar o texto sendo gerado em tempo
+ * real em vez de um loading de vários segundos. Texto livre, não JSON: um
+ * schema estruturado forçaria esperar o objeto inteiro fechar para ser útil.
+ */
+export async function* streamUGCScript(input: UGCScriptInput): AsyncGenerator<string> {
+  try {
+    for await (const chunk of streamGeminiText(scriptPrompt(input))) {
+      yield chunk;
+    }
+  } catch (error) {
+    if (error instanceof GeminiUnavailableError) {
+      yield "Roteiro indisponível: configure GEMINI_API_KEY para gerar em tempo real.";
+      return;
+    }
     throw error;
   }
 }

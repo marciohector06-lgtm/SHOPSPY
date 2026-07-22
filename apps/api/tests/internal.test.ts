@@ -16,7 +16,7 @@ function buildApp() {
 
 describe("POST /internal/jobs/:source/trigger — modo manual", () => {
   beforeEach(() => {
-    process.env.INTERNAL_API_TOKEN = TOKEN;
+    process.env.INTERNAL_TOKEN = TOKEN;
   });
 
   it("sem o header de token, responde 401", async () => {

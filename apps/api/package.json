@@ -21,6 +21,7 @@
     "cors": "^2.8.5",
     "helmet": "^8.0.0",
     "compression": "^1.7.4",
+    "cron-parser": "^4.9.0",
     "dotenv": "^16.4.5",
     "pino": "^9.5.0",
     "pino-http": "^10.3.0",

@@ -27,6 +27,23 @@ function getClient(): GoogleGenAI {
   return client;
 }
 
+/**
+ * Streaming puro (sem cache, sem JSON forçado) — usado quando o consumidor
+ * quer mostrar o texto sendo gerado aos poucos (roteiro na tela) em vez de
+ * esperar a resposta inteira. Cache/rate-limit de fila (p-limit) não fazem
+ * sentido aqui: a duração real da chamada é o tempo de streaming, não o
+ * tempo até o primeiro chunk, então só aplicamos o rate limiter de janela.
+ */
+export async function* streamGeminiText(prompt: string): AsyncGenerator<string> {
+  const ai = getClient();
+  await rateLimiter.waitForSlot();
+
+  const stream = await ai.models.generateContentStream({ model: MODEL, contents: prompt });
+  for await (const chunk of stream) {
+    if (chunk.text) yield chunk.text;
+  }
+}
+
 export interface GeminiJsonCallOptions {
   /** Namespace curto da função chamadora (ex.: "hook-extractor") — vira parte da chave de cache. */
   namespace: string;
