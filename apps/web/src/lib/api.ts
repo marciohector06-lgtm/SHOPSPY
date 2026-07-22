@@ -1,12 +1,22 @@
 import type { Category, ProductStatus } from "@shopspy/shared";
-import type { CategoryTrendsResponse, DashboardSummary, HealthResponse, ProductDetail, ProductsPage } from "./types";
+import type {
+  CategoryTrendsResponse,
+  DashboardSummary,
+  HealthResponse,
+  OpportunitiesTopResponse,
+  ProductDetail,
+  ProductsPage,
+} from "./types";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:4000";
 
 export class ApiError extends Error {
   constructor(
     message: string,
-    public readonly status?: number
+    public readonly status?: number,
+    /** Código de erro estruturado da API (ex.: "PRO_REQUIRED") — usado pra decidir que UI mostrar, não só um retry genérico. */
+    public readonly code?: string,
+    public readonly upgradeUrl?: string
   ) {
     super(message);
   }
@@ -15,12 +25,21 @@ export class ApiError extends Error {
 async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
   let response: Response;
   try {
-    response = await fetch(`${API_BASE_URL}${path}`, init);
+    // credentials:"include" é o que faz o cookie httpOnly de sessão viajar
+    // até a API (domínios diferentes em produção, mesma "host" em dev).
+    response = await fetch(`${API_BASE_URL}${path}`, { ...init, credentials: "include" });
   } catch {
     throw new ApiError("Não foi possível conectar à API. Verifique sua conexão e tente novamente.");
   }
 
   if (!response.ok) {
+    const body = await response.json().catch(() => null);
+    if (response.status === 403 && body?.error === "PRO_REQUIRED") {
+      throw new ApiError("Esse recurso é exclusivo do plano PRO.", 403, "PRO_REQUIRED", body.upgradeUrl);
+    }
+    if (response.status === 401) {
+      throw new ApiError("Sessão expirada — faça login novamente.", 401, "UNAUTHORIZED");
+    }
     throw new ApiError(`A API respondeu com erro (${response.status}).`, response.status);
   }
 
@@ -61,6 +80,11 @@ export function fetchCategoryTrends(): Promise<CategoryTrendsResponse> {
   return fetchJson<CategoryTrendsResponse>("/api/v1/dashboard/category-trends");
 }
 
+/** FREE recebe só o top 3 com `delayedAt` preenchido; PRO recebe tudo, em tempo real (delayedAt: null). */
+export function fetchTopOpportunities(): Promise<OpportunitiesTopResponse> {
+  return fetchJson<OpportunitiesTopResponse>("/api/v1/opportunities/top");
+}
+
 export function streamUrl(): string {
   return `${API_BASE_URL}/api/v1/stream`;
 }
@@ -74,7 +98,7 @@ export async function streamScript(
   onChunk: (text: string) => void,
   signal?: AbortSignal
 ): Promise<void> {
-  const response = await fetch(`${API_BASE_URL}/api/v1/products/${productId}/script`, { signal });
+  const response = await fetch(`${API_BASE_URL}/api/v1/products/${productId}/script`, { signal, credentials: "include" });
   if (!response.ok || !response.body) {
     throw new ApiError(`Falha ao gerar roteiro (${response.status}).`, response.status);
   }

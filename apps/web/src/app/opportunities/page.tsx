@@ -3,8 +3,8 @@
 import { useMemo, useState } from "react";
 import type { ScoreClass, Category } from "@shopspy/shared";
 import { CATEGORIES } from "@shopspy/shared";
-import { fetchProducts } from "../../lib/api";
-import { formatBRL, formatCategory } from "../../lib/format";
+import { fetchTopOpportunities } from "../../lib/api";
+import { formatBRL, formatCategory, formatDate } from "../../lib/format";
 import type { ProductDetail, TrendScoreEntry } from "../../lib/types";
 import { useAsyncData } from "../../hooks/useAsyncData";
 import { AsyncView } from "../../components/ui/AsyncView";
@@ -34,22 +34,22 @@ export default function OpportunitiesPage() {
   const [minCommission, setMinCommission] = useState<string>("");
   const [scriptModalProduct, setScriptModalProduct] = useState<ProductDetail | null>(null);
 
-  const state = useAsyncData(
-    () => fetchProducts({ limit: 50, category: category === "ALL" ? undefined : category }),
-    [category]
-  );
+  // FREE recebe só top 3 (com 48h de atraso) de /opportunities/top; PRO
+  // recebe tudo em tempo real. Os filtros abaixo agem sobre o que voltou.
+  const state = useAsyncData(fetchTopOpportunities, []);
 
   const filteredItems = useMemo(() => {
     if (state.status !== "success") return [];
     const min = minCommission ? Number(minCommission) : null;
 
     return state.data.items.filter((product) => {
+      if (category !== "ALL" && product.category !== category) return false;
       const score = latestScore(product);
       if (classification !== "ALL" && score?.classification !== classification) return false;
       if (min !== null && (product.commissionValueBR ?? 0) < min) return false;
       return true;
     });
-  }, [state, classification, minCommission]);
+  }, [state, classification, category, minCommission]);
 
   return (
     <div className="flex flex-col gap-4">
@@ -57,6 +57,16 @@ export default function OpportunitiesPage() {
         <h1 className="text-lg font-semibold text-zinc-100">Oportunidades</h1>
         <p className="text-sm text-zinc-500">Produtos monitorados, rankeados pelo ShopSpy Score.</p>
       </div>
+
+      {state.status === "success" && state.data.delayedAt && (
+        <div className="rounded-lg border border-yellow-800/40 bg-yellow-950/20 px-4 py-2 text-sm text-yellow-200">
+          🔒 Plano FREE: mostrando as top 3 oportunidades com 48h de atraso (dados de {formatDate(state.data.delayedAt)}).{" "}
+          <a href="/pricing" className="font-medium underline hover:text-yellow-100">
+            Assine o PRO
+          </a>{" "}
+          pra ver tudo em tempo real, sem limite.
+        </div>
+      )}
 
       <div className="flex flex-wrap items-end gap-3 rounded-lg border border-zinc-800 bg-zinc-900/40 p-3">
         <label className="flex flex-col gap-1 text-xs text-zinc-400">

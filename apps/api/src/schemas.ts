@@ -1,5 +1,5 @@
 import { z } from "zod";
-import { CATEGORIES, PRODUCT_STATUSES } from "@shopspy/shared";
+import { ALERT_CHANNELS, CATEGORIES, PRODUCT_STATUSES } from "@shopspy/shared";
 
 // Charset seguro de cuid — rejeita aspas, espaços, `;`, `--` etc. antes de
 // qualquer coisa chegar ao Prisma (defesa em profundidade, o Prisma já
@@ -27,3 +27,14 @@ export const productsListQuerySchema = z.object({
 });
 
 export type ProductsListQuery = z.infer<typeof productsListQuerySchema>;
+
+export const createAlertSchema = z.object({
+  productId: z.string().regex(ID_PATTERN, "productId inválido"),
+  threshold: z.coerce
+    .number({ message: "threshold deve ser um número" })
+    .min(0, "threshold mínimo é 0")
+    .max(100, "threshold máximo é 100"),
+  channel: z.enum(ALERT_CHANNELS, { message: `channel deve ser um de: ${ALERT_CHANNELS.join(", ")}` }),
+});
+
+export type CreateAlertBody = z.infer<typeof createAlertSchema>;

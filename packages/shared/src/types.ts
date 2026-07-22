@@ -56,6 +56,12 @@ export const SCRAPER_SOURCES = [
 ] as const;
 export type ScraperSource = (typeof SCRAPER_SOURCES)[number];
 
+export const PLANS = ["FREE", "PRO"] as const;
+export type Plan = (typeof PLANS)[number];
+
+export const ALERT_CHANNELS = ["email", "whatsapp", "push"] as const;
+export type AlertChannel = (typeof ALERT_CHANNELS)[number];
+
 export interface ExternalIds {
   shopee?: string;
   tiktokShop?: string;

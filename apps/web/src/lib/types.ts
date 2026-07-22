@@ -41,6 +41,12 @@ export interface ProductDetail extends Product {
   videos: ReferenceVideo[];
 }
 
+export interface OpportunitiesTopResponse {
+  items: ProductDetail[];
+  /** null pro plano PRO (tempo real) — preenchido pro FREE com o timestamp dos dados exibidos (agora - 48h). */
+  delayedAt: string | null;
+}
+
 export interface TrendScoreEntry {
   id: string;
   scoreTotal: number;

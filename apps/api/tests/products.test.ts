@@ -1,5 +1,6 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeAll, beforeEach, describe, expect, it, vi } from "vitest";
 import request from "supertest";
+import { signAccessToken } from "../src/lib/jwt";
 
 const { findManyMock, findUniqueMock, fakeRedis } = vi.hoisted(() => {
   class FakeRedis {
@@ -47,6 +48,14 @@ function buildApp() {
   return createApp({ internalRouterDeps: { queue, lock: new InMemoryJobLock() } });
 }
 
+// /api/v1/products exige PRO (Fase 9) — todo teste aqui usa esse token.
+let proAuthHeader: string;
+
+beforeAll(async () => {
+  process.env.JWT_ACCESS_SECRET = "test-secret";
+  proAuthHeader = `Bearer ${await signAccessToken({ sub: "user1", email: "pro@shopspy.com", plan: "PRO", name: null, avatarUrl: null })}`;
+});
+
 const PRODUCTS = [
   { id: "prod0001", name: "A", scores: [], videos: [] },
   { id: "prod0002", name: "B", scores: [], videos: [] },
@@ -63,7 +72,7 @@ describe("GET /api/v1/products — paginação cursor-based", () => {
   it("primeira página traz `limit` itens e nextCursor apontando pro último id retornado", async () => {
     findManyMock.mockResolvedValue(PRODUCTS.slice(0, 3)); // limit=2 pede 3 (limit+1)
 
-    const res = await request(buildApp()).get("/api/v1/products?limit=2");
+    const res = await request(buildApp()).get("/api/v1/products?limit=2").set("Authorization", proAuthHeader);
 
     expect(res.status).toBe(200);
     expect(res.body.items).toHaveLength(2);
@@ -76,7 +85,9 @@ describe("GET /api/v1/products — paginação cursor-based", () => {
   it("segunda página usa o cursor e não repete/pula itens", async () => {
     findManyMock.mockResolvedValue([PRODUCTS[2]]);
 
-    const res = await request(buildApp()).get("/api/v1/products?limit=2&cursor=prod0002");
+    const res = await request(buildApp())
+      .get("/api/v1/products?limit=2&cursor=prod0002")
+      .set("Authorization", proAuthHeader);
 
     expect(res.body.items).toEqual([PRODUCTS[2]]);
     expect(res.body.nextCursor).toBeNull();
@@ -89,11 +100,11 @@ describe("GET /api/v1/products — paginação cursor-based", () => {
     findManyMock.mockResolvedValue(PRODUCTS.slice(0, 2));
     const app = buildApp();
 
-    const first = await request(app).get("/api/v1/products?limit=5");
+    const first = await request(app).get("/api/v1/products?limit=5").set("Authorization", proAuthHeader);
     expect(first.headers["x-cache"]).toBe("MISS");
     expect(first.headers["x-cache-ttl"]).toBe("30");
 
-    const second = await request(app).get("/api/v1/products?limit=5");
+    const second = await request(app).get("/api/v1/products?limit=5").set("Authorization", proAuthHeader);
     expect(second.headers["x-cache"]).toBe("HIT");
     expect(Number(second.headers["x-cache-ttl"])).toBeLessThanOrEqual(30);
     expect(second.body).toEqual(first.body);
@@ -103,9 +114,9 @@ describe("GET /api/v1/products — paginação cursor-based", () => {
   });
 
   it("SQL injection no cursor: payload é rejeitado com 400 antes de chegar ao Prisma", async () => {
-    const res = await request(buildApp()).get(
-      "/api/v1/products?cursor=" + encodeURIComponent("1' OR '1'='1'; DROP TABLE products;--")
-    );
+    const res = await request(buildApp())
+      .get("/api/v1/products?cursor=" + encodeURIComponent("1' OR '1'='1'; DROP TABLE products;--"))
+      .set("Authorization", proAuthHeader);
 
     expect(res.status).toBe(400);
     expect(res.body.error).toBe("validation_error");
@@ -114,10 +125,25 @@ describe("GET /api/v1/products — paginação cursor-based", () => {
   });
 
   it("limit inválido (não numérico) responde 400 com o campo exato", async () => {
-    const res = await request(buildApp()).get("/api/v1/products?limit=abc");
+    const res = await request(buildApp()).get("/api/v1/products?limit=abc").set("Authorization", proAuthHeader);
 
     expect(res.status).toBe(400);
     expect(res.body.details).toContainEqual(expect.objectContaining({ field: "limit" }));
+  });
+
+  it("sem token, responde 401 (não chega nem a validar query)", async () => {
+    const res = await request(buildApp()).get("/api/v1/products?limit=2");
+    expect(res.status).toBe(401);
+    expect(findManyMock).not.toHaveBeenCalled();
+  });
+
+  it("plano FREE responde 403 PRO_REQUIRED — /products é dado de oportunidade completo, só PRO", async () => {
+    const freeToken = `Bearer ${await signAccessToken({ sub: "user2", email: "free@shopspy.com", plan: "FREE", name: null, avatarUrl: null })}`;
+    const res = await request(buildApp()).get("/api/v1/products?limit=2").set("Authorization", freeToken);
+
+    expect(res.status).toBe(403);
+    expect(res.body).toEqual({ error: "PRO_REQUIRED", upgradeUrl: "/pricing" });
+    expect(findManyMock).not.toHaveBeenCalled();
   });
 });
 
@@ -129,14 +155,14 @@ describe("GET /api/v1/products/:id", () => {
 
   it("produto inexistente responde 404", async () => {
     findUniqueMock.mockResolvedValue(null);
-    const res = await request(buildApp()).get("/api/v1/products/prod0001");
+    const res = await request(buildApp()).get("/api/v1/products/prod0001").set("Authorization", proAuthHeader);
     expect(res.status).toBe(404);
   });
 
   it("id com caracteres inválidos (tentativa de injeção) responde 400, não 500", async () => {
-    const res = await request(buildApp()).get(
-      "/api/v1/products/" + encodeURIComponent("' OR 1=1--")
-    );
+    const res = await request(buildApp())
+      .get("/api/v1/products/" + encodeURIComponent("' OR 1=1--"))
+      .set("Authorization", proAuthHeader);
     expect(res.status).toBe(400);
     expect(findUniqueMock).not.toHaveBeenCalled();
   });

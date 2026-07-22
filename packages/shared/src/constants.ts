@@ -24,3 +24,9 @@ export const GLOBAL_TRENDS_WEIGHTS = {
   AU: 0.2,
   CA: 0.15,
 } as const;
+
+// Nomes de cookie compartilhados entre a API (authMiddleware) e o frontend
+// (Route Handler que grava, middleware que lê) — precisam ser idênticos
+// dos dois lados pra sessão funcionar.
+export const ACCESS_COOKIE_NAME = "shopspy_access";
+export const REFRESH_COOKIE_NAME = "shopspy_refresh";

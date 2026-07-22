@@ -63,7 +63,7 @@ const { HOT_PRODUCT, COLD_PRODUCT } = vi.hoisted(() => {
 });
 
 vi.mock("../src/lib/api", () => ({
-  fetchProducts: vi.fn().mockResolvedValue({ items: [HOT_PRODUCT, COLD_PRODUCT], nextCursor: null }),
+  fetchTopOpportunities: vi.fn().mockResolvedValue({ items: [HOT_PRODUCT, COLD_PRODUCT], delayedAt: null }),
 }));
 
 // jsdom não implementa ResizeObserver — o ResponsiveContainer do recharts (SparklineChart) precisa dele.
