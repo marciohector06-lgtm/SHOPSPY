@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { prisma } from "@shopspy/database";
+import { isoWeek } from "@shopspy/shared";
 import { authMiddleware } from "../lib/authMiddleware";
-import { isoWeek } from "../lib/isoWeek";
 import { reverseScores, scoresVideosInclude } from "../lib/productInclude";
 
 const FREE_DELAY_MS = 48 * 60 * 60 * 1000;

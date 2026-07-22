@@ -1,8 +1,7 @@
 import { Router } from "express";
 import { prisma } from "@shopspy/database";
-import { CATEGORIES } from "@shopspy/shared";
+import { CATEGORIES, isoWeek } from "@shopspy/shared";
 import { withCache } from "../lib/cache";
-import { isoWeek } from "../lib/isoWeek";
 
 export function createDashboardRouter(): Router {
   const router = Router();

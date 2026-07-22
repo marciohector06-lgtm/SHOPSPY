@@ -11,6 +11,7 @@ import {
   runGoogleTrendsGlobalScraper,
   type ScraperRunResult,
 } from "@shopspy/scrapers";
+import { runAlertChecker } from "./alertChecker";
 
 export type ScraperRunner = () => Promise<ScraperRunResult>;
 
@@ -39,6 +40,7 @@ export const SCRAPER_RUNNERS: Record<string, ScraperRunner> = {
   GOOGLE_TRENDS_US: runGoogleTrendsGlobalScraper, // trends global combinado (decisão da Fase 3)
   VIDEOS_US: NOT_IMPLEMENTED("VIDEOS_US"),
   VIDEOS_BR: NOT_IMPLEMENTED("VIDEOS_BR"),
+  ALERT_CHECKER: runAlertChecker,
 };
 
 export function isKnownSource(source: string): boolean {

@@ -65,6 +65,20 @@ export async function enqueueScraper(
   return job.id ?? null;
 }
 
+async function enqueueFollowupJob(
+  connection: ConnectionOptions,
+  jobName: string,
+  data: Record<string, unknown> = {}
+): Promise<void> {
+  const cycleId = todayCycleId();
+  const queue = new Queue(QUEUE_NAME, { connection });
+  try {
+    await queue.add(jobName, data, { jobId: `${jobName}:${cycleId}`, removeOnComplete: true });
+  } finally {
+    await queue.close();
+  }
+}
+
 async function onScraperCycleStepDone(
   jobName: string,
   barrier: CycleBarrier,
@@ -76,16 +90,7 @@ async function onScraperCycleStepDone(
   const complete = await barrier.markSourceDone(cycleId, jobName);
   if (!complete) return;
 
-  const queue = new Queue(QUEUE_NAME, { connection });
-  try {
-    await queue.add(
-      "SCORE_CALCULATOR",
-      { cycleId },
-      { jobId: `SCORE_CALCULATOR:${cycleId}`, removeOnComplete: true }
-    );
-  } finally {
-    await queue.close();
-  }
+  await enqueueFollowupJob(connection, "SCORE_CALCULATOR", { cycleId });
 }
 
 /**
@@ -144,6 +149,13 @@ export function createScraperWorker(connection: ConnectionOptions, redis: Redis)
 
   worker.on("completed", async (job) => {
     await lock.release(job.name);
+    if (job.name === "SCORE_CALCULATOR") {
+      // Fase 10: alertas só fazem sentido depois que o score do dia foi
+      // recalculado — dispara como um job normal (mesma fila, mesmas
+      // garantias de retry/timeout/status) em vez de chamar direto aqui.
+      await enqueueFollowupJob(connection, "ALERT_CHECKER");
+      return;
+    }
     await onScraperCycleStepDone(job.name, barrier, connection);
   });
 
