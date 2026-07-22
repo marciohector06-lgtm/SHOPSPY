@@ -1,0 +1,26 @@
+{
+  "items": [
+    {
+      "item_basic": {
+        "itemid": 22334455,
+        "shopid": 998877,
+        "name": "Kit Skincare Facial 5 Peças Hidratante",
+        "price": 8990000,
+        "historical_sold": 14500,
+        "item_rating": { "rating_star": 4.8 },
+        "images": ["sg-11134201-abcd1234"]
+      }
+    },
+    {
+      "item_basic": {
+        "itemid": 22334456,
+        "shopid": 998877,
+        "name": "Sérum Facial Vitamina C 30ml",
+        "price": 3490000,
+        "historical_sold": 8200,
+        "item_rating": { "rating_star": 4.6 },
+        "images": ["sg-11134201-efgh5678"]
+      }
+    }
+  ]
+}

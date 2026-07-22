@@ -1,0 +1,284 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider  = "postgresql"
+  url       = env("DATABASE_URL")
+  directUrl = env("DIRECT_URL")
+}
+
+// ─── PRODUTO ────────────────────────────────────────────────────────────────
+
+model Product {
+  id                String    @id @default(cuid())
+  name              String
+  nameNormalized    String    // lowercase sem acento para deduplicação
+  nameEn            String?   // nome em inglês (traduzido por Gemini)
+  category          Category
+  subcategory       String?
+  imageUrl          String?
+  externalIds       Json      // { shopee?: string, tiktokShop?: string, mercadoLivre?: string }
+
+  // Dados BR
+  priceBR           Float?
+  commissionPctBR   Float?
+  commissionValueBR Float?
+  soldCountBR       Int?
+  ratingBR          Float?
+  searchesBR        Int?      // buscas na última semana (Shopee)
+  creatorVideosBR   Int?      // vídeos de criadores no TikTok Shop BR
+
+  // Dados Globais (EUA como referência principal)
+  priceUS           Float?
+  soldCountUS       Int?
+  amazonRankUS      Int?      // posição no Best Sellers Amazon (US)
+  amazonRankUK      Int?      // posição no Best Sellers Amazon (UK)
+  tiktokImpressions Int?      // impressões no Creative Center US
+  tiktokCTR         Float?    // CTR no Creative Center US
+
+  // Metadados
+  firstSeenUS       DateTime? // quando apareceu pela primeira vez nos EUA
+  firstSeenBR       DateTime? // quando apareceu pela primeira vez no BR
+  status            ProductStatus @default(MONITORING)
+
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+
+  // Relações
+  scores            TrendScore[]
+  videos            ReferenceVideo[]
+  alerts            Alert[]
+  matchedProducts   ProductMatch[] @relation("sourceProduct")
+  matchedBy         ProductMatch[] @relation("matchedProduct")
+
+  @@index([nameNormalized])
+  @@index([category])
+  @@index([status])
+}
+
+// ─── SCORE ──────────────────────────────────────────────────────────────────
+
+model TrendScore {
+  id              String   @id @default(cuid())
+  productId       String
+  product         Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  // Score final
+  scoreTotal      Float    // 0-100
+  classification  ScoreClass // MAXIMUM | HIGH | MEDIUM | SATURATING | AVOID
+
+  // Componentes do score
+  scoreVelocityUS Float    // crescimento % semana a semana nos EUA
+  scoreGapBRUS    Float    // diferença de saturação BR vs EUA
+  scoreCommission Float    // comissão disponível
+  scoreSocialProof Float   // avaliações + vendidos
+  scoreUGC        Float    // facilidade de criar UGC sem aparecer
+
+  // Dados de tendência
+  trendsUS        Float    // Google Trends EUA (0-100)
+  trendsBR        Float    // Google Trends Brasil (0-100)
+  trendsUK        Float?   // Google Trends UK (0-100)
+  gap             Float    // trendsUS - trendsBR (quanto maior, melhor oportunidade)
+  weeklyChangeUS  Float    // % de crescimento esta semana vs semana passada
+  weeklyChangeBR  Float    // % de crescimento BR esta semana
+
+  // Janela de oportunidade
+  windowWeeks     Int?     // estimativa de semanas até saturar no BR
+  windowLabel     String?  // "2-3 semanas" | "1 mês" | "2+ meses"
+
+  weekNumber      Int
+  year            Int
+  createdAt       DateTime @default(now())
+
+  @@unique([productId, weekNumber, year])
+  @@index([scoreTotal(sort: Desc)])
+  @@index([classification])
+  @@index([weekNumber, year])
+}
+
+// ─── MATCH GLOBAL → BR ──────────────────────────────────────────────────────
+
+model ProductMatch {
+  id              String   @id @default(cuid())
+  // Produto encontrado no exterior
+  sourceProductId String
+  sourceProduct   Product  @relation("sourceProduct", fields: [sourceProductId], references: [id])
+  sourceRegion    String   // US | UK | AU | EU
+
+  // Produto equivalente encontrado no Brasil (pode ser null = sem equivalente)
+  matchedProductId String?
+  matchedProduct   Product? @relation("matchedProduct", fields: [matchedProductId], references: [id])
+
+  similarityScore Float    // 0-1 (quão similar é o match)
+  matchMethod     String   // 'exact' | 'semantic' | 'category' | 'none'
+
+  createdAt       DateTime @default(now())
+
+  @@index([sourceProductId])
+  @@index([matchedProductId])
+}
+
+// ─── VÍDEOS DE REFERÊNCIA ───────────────────────────────────────────────────
+
+model ReferenceVideo {
+  id          String   @id @default(cuid())
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  url         String
+  thumbnailUrl String?
+  platform    String   // tiktok | instagram | youtube
+  region      String   // US | BR | UK
+
+  likes       Int      @default(0)
+  views       Int      @default(0)
+  comments    Int      @default(0)
+  shares      Int      @default(0)
+
+  // Análise por IA
+  hook        String?  // gancho dos primeiros 3 segundos
+  hookType    String?  // emotional | social_proof | curiosity | pov | before_after
+  scriptPt    String?  // roteiro adaptado para português
+  ugcPrompt   String?  // prompt Flow/Veo para recriar o estilo
+
+  hasUGCStyle Boolean  @default(false) // é estilo UGC (sem aparecer ou avatar)
+
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  @@index([productId, region])
+  @@index([likes(sort: Desc)])
+}
+
+// ─── USUÁRIOS E PLANOS ──────────────────────────────────────────────────────
+
+model User {
+  id          String    @id @default(cuid())
+  email       String    @unique
+  name        String?
+  avatarUrl   String?
+  plan        Plan      @default(FREE)
+  planExpiresAt DateTime?
+
+  // Limites do plano FREE
+  alertsUsed  Int       @default(0)
+  alertsLimit Int       @default(3)
+
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  alerts      Alert[]
+  sessions    Session[]
+
+  @@index([plan])
+}
+
+model Alert {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  threshold   Float    // score mínimo para disparar alerta
+  channel     String   // whatsapp | email | push
+  active      Boolean  @default(true)
+  lastFiredAt DateTime?
+  fireCount   Int      @default(0)
+
+  createdAt   DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+model Session {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  token       String   @unique
+  expiresAt   DateTime
+  userAgent   String?
+  ip          String?
+  createdAt   DateTime @default(now())
+
+  @@index([token])
+}
+
+// ─── LOGS E MONITORAMENTO ───────────────────────────────────────────────────
+
+model ScraperLog {
+  id          String   @id @default(cuid())
+  source      ScraperSource
+  region      String   // BR | US | UK | GLOBAL
+  status      String   // success | error | partial | timeout
+  itemsFound  Int      @default(0)
+  itemsNew    Int      @default(0)    // novos produtos descobertos
+  itemsUpdated Int     @default(0)   // produtos atualizados
+  duration    Int                    // ms
+  error       String?
+  metadata    Json?                  // dados extras de debug
+  createdAt   DateTime @default(now())
+
+  @@index([source, createdAt(sort: Desc)])
+  @@index([status])
+}
+
+// ─── ENUMS ──────────────────────────────────────────────────────────────────
+
+enum Category {
+  BEAUTY_SKINCARE
+  MAKEUP
+  HAIR_CARE
+  FASHION_WOMEN
+  FASHION_MEN
+  ACCESSORIES
+  HOME_CLEANING
+  HOME_ORGANIZATION
+  HOME_DECOR
+  KITCHEN
+  FITNESS
+  ELECTRONICS_GADGETS
+  SUPPLEMENTS
+  PETS
+  OTHER
+}
+
+enum ProductStatus {
+  MONITORING   // sendo monitorado ativamente
+  OPPORTUNITY  // score alto, oportunidade identificada
+  TRENDING_BR  // já está bombando no Brasil
+  SATURATED    // saturado, não vale mais investir
+  ARCHIVED     // arquivado
+}
+
+enum ScoreClass {
+  MAXIMUM      // Score > 80 + gap alto
+  HIGH         // Score 65-80
+  MEDIUM       // Score 50-65
+  SATURATING   // Score qualquer + BR > 70
+  AVOID        // Score < 30 ou caindo
+}
+
+enum Plan {
+  FREE
+  PRO
+}
+
+enum ScraperSource {
+  GOOGLE_TRENDS_BR
+  GOOGLE_TRENDS_US
+  GOOGLE_TRENDS_UK
+  GOOGLE_TRENDS_AU
+  GOOGLE_TRENDS_CA
+  SHOPEE_BR
+  TIKTOK_SHOP_BR
+  MERCADOLIVRE_BR
+  TIKTOK_CREATIVE_US
+  TIKTOK_SHOP_US
+  AMAZON_US
+  AMAZON_UK
+  ALIEXPRESS_GLOBAL
+  VIDEOS_US
+  VIDEOS_BR
+}

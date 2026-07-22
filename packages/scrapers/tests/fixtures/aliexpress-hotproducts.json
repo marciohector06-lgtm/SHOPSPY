@@ -1,0 +1,32 @@
+{
+  "aliexpress_affiliate_hotproduct_query_response": {
+    "resp_result": {
+      "result": {
+        "products": {
+          "product": [
+            {
+              "product_id": 1005001234567890,
+              "product_title": "Portable Mini Blender USB Rechargeable",
+              "product_main_image_url": "https://ae01.alicdn.com/kf/abc123.jpg",
+              "target_sale_price": "12.99",
+              "target_sale_price_currency": "USD",
+              "lastest_volume": 3200,
+              "first_level_category_name": "Home Appliances"
+            },
+            {
+              "product_id": 1005001234567891,
+              "product_title": "LED Strip Lights RGB 5M",
+              "product_main_image_url": "https://ae01.alicdn.com/kf/def456.jpg",
+              "target_sale_price": "8.49",
+              "target_sale_price_currency": "USD",
+              "lastest_volume": 8900,
+              "first_level_category_name": "Home Decor"
+            }
+          ]
+        },
+        "current_page_no": 1,
+        "total_record_count": 542
+      }
+    }
+  }
+}

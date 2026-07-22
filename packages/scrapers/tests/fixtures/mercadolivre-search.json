@@ -1,0 +1,35 @@
+{
+  "site_id": "MLB",
+  "query": "fone de ouvido",
+  "paging": { "total": 45231, "offset": 0, "limit": 3 },
+  "results": [
+    {
+      "id": "MLB3456789012",
+      "title": "Fone De Ouvido Bluetooth Sem Fio Tws Com Estojo",
+      "condition": "new",
+      "thumbnail": "http://http2.mlstatic.com/D_123456-MLB.jpg",
+      "price": 89.9,
+      "original_price": 129.9,
+      "available_quantity": 500,
+      "sold_quantity": 3200,
+      "permalink": "https://produto.mercadolivre.com.br/MLB-3456789012"
+    },
+    {
+      "id": "MLB3456789013",
+      "title": "Fone De Ouvido Gamer Com Microfone Led Rgb",
+      "condition": "new",
+      "thumbnail": "http://http2.mlstatic.com/D_123457-MLB.jpg",
+      "price": 45.5,
+      "available_quantity": 200,
+      "sold_quantity": 850,
+      "permalink": "https://produto.mercadolivre.com.br/MLB-3456789013"
+    },
+    {
+      "id": "MLB3456789014",
+      "title": "Fone Sem Preco Disponivel Ainda",
+      "thumbnail": "http://http2.mlstatic.com/D_123458-MLB.jpg",
+      "available_quantity": 0,
+      "sold_quantity": 0
+    }
+  ]
+}

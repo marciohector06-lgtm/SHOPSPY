@@ -1,0 +1,11 @@
+{
+  "default": {
+    "timelineData": [
+      { "time": "1", "formattedTime": "5 semanas atrás", "value": [12], "hasData": [true], "formattedValue": ["12"] },
+      { "time": "2", "formattedTime": "4 semanas atrás", "value": [15], "hasData": [true], "formattedValue": ["15"] },
+      { "time": "3", "formattedTime": "3 semanas atrás", "value": [22], "hasData": [true], "formattedValue": ["22"] },
+      { "time": "4", "formattedTime": "2 semanas atrás", "value": [18], "hasData": [true], "formattedValue": ["18"] },
+      { "time": "5", "formattedTime": "1 semana atrás", "value": [45] , "hasData": [true], "formattedValue": ["45"]}
+    ]
+  }
+}
