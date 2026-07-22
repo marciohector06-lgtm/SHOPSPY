@@ -75,9 +75,15 @@ export async function generateUGCScript(input: UGCScriptInput): Promise<UGCScrip
   }
 }
 
+/**
+ * Marcadores de seção usados tanto no prompt quanto no parser do frontend
+ * (apps/web/src/components/UGCScriptModal.tsx) — mudar aqui exige mudar lá.
+ */
+export const SCRIPT_STREAM_SECTION_MARKERS = ["HOOK", "PROBLEMA", "PRODUTO", "PROVA", "CTA", "PROMPTS FLOW"] as const;
+
 function scriptPrompt(input: UGCScriptInput): string {
   const facts = `${input.name} | R$${input.priceBR ?? "?"} | comissão R$${input.commissionValueBR ?? "?"} | ${input.ratingBR ?? "?"}★ | ${input.soldCountBR ?? "?"} vendidos`;
-  return `Roteiro UGC 30-35s para afiliado TikTok Shop BR, avatar não aparece (só mãos/reação), tom natural de indicação, CTA no fim. Produto: ${facts}. Escreva em texto corrido (não JSON) com as seções HOOK (0-3s), PROBLEMA (3-8s), PRODUTO (8-18s), PROVA (18-28s) e CTA (28-35s), cada uma com o texto a ser falado.`;
+  return `Roteiro UGC 30-35s para afiliado TikTok Shop BR, avatar não aparece (só mãos/reação), tom natural de indicação, CTA no fim. Produto: ${facts}. Escreva em texto corrido (não JSON) com as seções HOOK (0-3s), PROBLEMA (3-8s), PRODUTO (8-18s), PROVA (18-28s) e CTA (28-35s), cada uma com o texto a ser falado. Ao final, adicione uma seção PROMPTS FLOW com exatamente 4 prompts (um por linha, sem numeração) em inglês para recriar esse estilo de vídeo no Google Flow/Veo.`;
 }
 
 /**

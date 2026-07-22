@@ -26,11 +26,18 @@ export function createProductsRouter(): Router {
         orderBy: { id: "asc" },
         take: query.limit + 1,
         ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+        include: {
+          // desc + reverse (não asc+take direto): asc+take pegaria as 4
+          // semanas MAIS ANTIGAS do histórico, não as mais recentes.
+          scores: { orderBy: [{ year: "desc" }, { weekNumber: "desc" }], take: 4 },
+          videos: { orderBy: { likes: "desc" }, take: 2 },
+        },
       });
 
       const hasMore = rows.length > query.limit;
-      const items = hasMore ? rows.slice(0, query.limit) : rows;
-      const nextCursor = hasMore ? (items[items.length - 1]?.id ?? null) : null;
+      const page = hasMore ? rows.slice(0, query.limit) : rows;
+      const nextCursor = hasMore ? (page[page.length - 1]?.id ?? null) : null;
+      const items = page.map((row) => ({ ...row, scores: [...row.scores].reverse() }));
 
       return { items, nextCursor };
     });
@@ -38,11 +45,21 @@ export function createProductsRouter(): Router {
     res.json(page);
   });
 
+  /** Um único fetch traz tudo que a tela de detalhe precisa: histórico de score (8 semanas) e vídeos de referência. */
   router.get("/:id", validate(idParamSchema, "params"), async (req, res) => {
     const { id } = req.params as unknown as { id: string };
-    const product = await withCache(res, `product:${id}`, 60, () =>
-      prisma.product.findUnique({ where: { id } })
-    );
+    const product = await withCache(res, `product:${id}`, 60, async () => {
+      const row = await prisma.product.findUnique({
+        where: { id },
+        include: {
+          // desc + reverse: pega as 8 semanas mais RECENTES e devolve em
+          // ordem cronológica (asc+take pegaria as mais antigas do histórico).
+          scores: { orderBy: [{ year: "desc" }, { weekNumber: "desc" }], take: 8 },
+          videos: { orderBy: { likes: "desc" }, take: 6 },
+        },
+      });
+      return row ? { ...row, scores: [...row.scores].reverse() } : null;
+    });
 
     if (!product) {
       res.status(404).json({ error: "produto não encontrado" });

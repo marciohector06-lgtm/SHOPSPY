@@ -5,6 +5,7 @@ import compression from "compression";
 import { healthRouter } from "./routes/health";
 import { createStreamRouter } from "./routes/stream";
 import { createProductsRouter } from "./routes/products";
+import { createDashboardRouter } from "./routes/dashboard";
 import { createInternalRouter, type InternalRouterDeps } from "./routes/internal";
 
 export interface CreateAppDeps {
@@ -27,6 +28,7 @@ export function createApp(deps: CreateAppDeps) {
   app.use("/api/v1/health", healthRouter);
   app.use("/api/v1/stream", createStreamRouter());
   app.use("/api/v1/products", createProductsRouter());
+  app.use("/api/v1/dashboard", createDashboardRouter());
   app.use("/internal/jobs", createInternalRouter(deps.internalRouterDeps));
 
   return app;

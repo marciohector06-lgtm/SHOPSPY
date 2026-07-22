@@ -48,9 +48,9 @@ function buildApp() {
 }
 
 const PRODUCTS = [
-  { id: "prod0001", name: "A" },
-  { id: "prod0002", name: "B" },
-  { id: "prod0003", name: "C" },
+  { id: "prod0001", name: "A", scores: [], videos: [] },
+  { id: "prod0002", name: "B", scores: [], videos: [] },
+  { id: "prod0003", name: "C", scores: [], videos: [] },
 ];
 
 describe("GET /api/v1/products — paginação cursor-based", () => {
