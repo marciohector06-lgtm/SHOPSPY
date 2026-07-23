@@ -125,6 +125,25 @@ export function PlayIcon({ className = BASE }: IconProps) {
   );
 }
 
+export function PackageIcon({ className = BASE }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path d="M3.5 8 12 3.5 20.5 8v8L12 20.5 3.5 16Z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+      <path d="M3.5 8 12 12.5 20.5 8M12 12.5V20.5" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+    </svg>
+  );
+}
+
+export function UsersIcon({ className = BASE }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <circle cx="9" cy="8.5" r="3" stroke="currentColor" strokeWidth="1.6" />
+      <path d="M3 19c0-3 2.7-5 6-5s6 2 6 5" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+      <path d="M15.5 5.8a3 3 0 0 1 0 5.9M18.5 19c0-2.6-1.9-4.5-4.3-4.9" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function ImagePlaceholderIcon({ className = BASE }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>

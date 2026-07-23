@@ -1,13 +1,9 @@
-import { Inter, JetBrains_Mono } from "next/font/google";
 import type { ReactNode } from "react";
 import { HeroBackground } from "./HeroBackground";
 import { AnimatedCounter } from "./AnimatedCounter";
 import { MiniDashboard } from "./MiniDashboard";
 import { Reveal } from "./Reveal";
 import { LogoMark } from "../icons";
-
-const displayFont = Inter({ subsets: ["latin"], weight: ["400", "500", "800"], variable: "--font-display" });
-const dataFont = JetBrains_Mono({ subsets: ["latin"], weight: ["400", "500"], variable: "--font-data" });
 
 const METRICS = [
   { value: 11, label: "Fontes monitoradas" },
@@ -33,7 +29,7 @@ const HOW_IT_WORKS = [
 /** Layout de duas colunas compartilhado por /login e /register — só o card da direita muda. */
 export function AuthHeroLayout({ rightCard }: { rightCard: ReactNode }) {
   return (
-    <div className={`${displayFont.variable} ${dataFont.variable} relative min-h-screen bg-brand-bg`}>
+    <div className="relative min-h-screen bg-brand-bg">
       <nav className="relative z-10 flex items-center justify-between px-6 py-6 sm:px-10">
         <div className="flex items-center gap-2">
           <LogoMark className="h-5 w-5 text-brand-primary" />
