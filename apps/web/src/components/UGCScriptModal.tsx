@@ -92,13 +92,13 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/60 p-4" role="dialog" aria-modal="true">
-      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-zinc-800 bg-zinc-900 shadow-xl">
-        <header className="flex items-center justify-between border-b border-zinc-800 px-5 py-4">
+      <div className="flex max-h-[85vh] w-full max-w-2xl flex-col rounded-xl border border-spy-border bg-spy-card shadow-xl">
+        <header className="flex items-center justify-between border-b border-spy-border px-5 py-4">
           <div>
-            <h2 className="text-sm font-semibold text-zinc-100">Roteiro UGC — {productName}</h2>
+            <h2 className="text-sm font-semibold text-spy-text">Roteiro UGC — {productName}</h2>
             {streaming && (
-              <p className="mt-0.5 flex items-center gap-1.5 text-xs text-indigo-400">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-400" />
+              <p className="mt-0.5 flex items-center gap-1.5 text-xs text-spy-indigo-light">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-spy-indigo-light" />
                 gerando em tempo real…
               </p>
             )}
@@ -107,7 +107,7 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="rounded-md p-1 text-zinc-400 hover:bg-zinc-800 hover:text-zinc-200"
+            className="rounded-md p-1 text-spy-muted hover:bg-spy-hover hover:text-spy-text"
           >
             ✕
           </button>
@@ -115,7 +115,7 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
           {error && (
-            <p className="mb-3 flex items-center gap-1.5 text-sm text-red-400">
+            <p className="mb-3 flex items-center gap-1.5 text-sm text-spy-max">
               <WarningIcon className="h-4 w-4" />
               {error}
             </p>
@@ -123,17 +123,17 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
 
           <div className="flex flex-col gap-2">
             {SCRIPT_MARKERS.map((marker) => (
-              <div key={marker} className="rounded-lg border border-zinc-800">
+              <div key={marker} className="rounded-lg border border-spy-border">
                 <button
                   type="button"
                   onClick={() => setOpenSections((prev) => ({ ...prev, [marker]: !prev[marker] }))}
-                  className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium text-zinc-200"
+                  className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium text-spy-text"
                 >
                   {SECTION_LABELS[marker]}
-                  <span className="text-zinc-500">{openSections[marker] ? "▾" : "▸"}</span>
+                  <span className="text-spy-muted">{openSections[marker] ? "▾" : "▸"}</span>
                 </button>
                 {openSections[marker] && (
-                  <p className="border-t border-zinc-800 px-3 py-2 text-sm leading-relaxed text-zinc-300">
+                  <p className="border-t border-spy-border px-3 py-2 text-sm leading-relaxed text-spy-muted">
                     {sections[marker] || (streaming ? "…" : "—")}
                   </p>
                 )}
@@ -142,21 +142,21 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
           </div>
 
           {(flowPrompts.length > 0 || streaming) && (
-            <div className="mt-4 rounded-lg border border-indigo-900/40 bg-indigo-950/20 p-3">
-              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-indigo-300">
+            <div className="mt-4 rounded-lg border border-spy-indigo/30 bg-spy-indigo-dim p-3">
+              <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-spy-indigo-light">
                 Prompts Google Flow
               </h3>
               {flowPrompts.length === 0 ? (
-                <p className="text-xs text-zinc-500">aguardando…</p>
+                <p className="text-xs text-spy-muted">aguardando…</p>
               ) : (
                 <ul className="flex flex-col gap-2">
                   {flowPrompts.map((prompt, index) => (
-                    <li key={index} className="flex items-start justify-between gap-2 rounded-md bg-zinc-900/60 p-2">
-                      <span className="text-xs text-zinc-300">{prompt}</span>
+                    <li key={index} className="flex items-start justify-between gap-2 rounded-md bg-spy-surface p-2">
+                      <span className="text-xs text-spy-muted">{prompt}</span>
                       <button
                         type="button"
                         onClick={() => copyPrompt(prompt, index)}
-                        className="shrink-0 rounded-md bg-indigo-500/20 px-2 py-0.5 text-[11px] font-medium text-indigo-300 hover:bg-indigo-500/30"
+                        className="shrink-0 rounded-md bg-spy-indigo-dim px-2 py-0.5 text-[11px] font-medium text-spy-indigo-light hover:bg-spy-indigo/30"
                       >
                         {copiedIndex === index ? "copiado!" : "copiar"}
                       </button>

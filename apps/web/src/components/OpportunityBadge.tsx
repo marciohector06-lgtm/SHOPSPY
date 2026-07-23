@@ -1,6 +1,6 @@
 import type { ScoreClass } from "@shopspy/shared";
 
-const LABELS: Record<ScoreClass, string> = {
+export const CLASSIFICATION_LABELS: Record<ScoreClass, string> = {
   MAXIMUM: "Máxima",
   HIGH: "Alta",
   MEDIUM: "Média",
@@ -30,7 +30,7 @@ export function OpportunityBadge({ classification }: { classification: ScoreClas
       className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${COLORS[classification]}`}
     >
       <span aria-hidden>{EMOJI[classification]}</span>
-      {LABELS[classification]}
+      {CLASSIFICATION_LABELS[classification]}
     </span>
   );
 }

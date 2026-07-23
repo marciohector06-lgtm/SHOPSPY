@@ -62,7 +62,7 @@ export interface FetchProductsParams {
   status?: ProductStatus;
 }
 
-export function fetchProducts(params: FetchProductsParams = {}): Promise<ProductsPage> {
+export function fetchProducts(params: FetchProductsParams = {}, token?: string): Promise<ProductsPage> {
   const search = new URLSearchParams();
   if (params.cursor) search.set("cursor", params.cursor);
   if (params.limit) search.set("limit", String(params.limit));
@@ -70,7 +70,7 @@ export function fetchProducts(params: FetchProductsParams = {}): Promise<Product
   if (params.status) search.set("status", params.status);
 
   const query = search.toString();
-  return fetchJson<ProductsPage>(`/api/v1/products${query ? `?${query}` : ""}`);
+  return fetchJson<ProductsPage>(`/api/v1/products${query ? `?${query}` : ""}`, { cache: "no-store" }, token);
 }
 
 export function fetchProduct(id: string): Promise<ProductDetail> {
