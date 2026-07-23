@@ -34,6 +34,19 @@ function nextRunFor(cron: string): string | null {
   }
 }
 
+/**
+ * GOOGLE_TRENDS_US é o valor real no banco/enum, mas cobre trends combinado
+ * de vários mercados (decisão da Fase 3) — no /health exibimos o rótulo que
+ * reflete o que a fonte realmente faz, sem renomear o enum em si.
+ */
+const SOURCE_LABELS: Record<string, string> = {
+  GOOGLE_TRENDS_US: "Google Trends Global",
+};
+
+function labelFor(source: string): string {
+  return SOURCE_LABELS[source] ?? source;
+}
+
 async function scraperStatuses() {
   const scraperEntries = SCHEDULES.filter((entry) =>
     (SCRAPER_SOURCES as readonly string[]).includes(entry.source)
@@ -48,6 +61,7 @@ async function scraperStatuses() {
 
       return {
         source: entry.source,
+        label: labelFor(entry.source),
         lastRun: lastLog
           ? { at: lastLog.createdAt.toISOString(), status: lastLog.status, itemsFound: lastLog.itemsFound }
           : null,
@@ -55,6 +69,28 @@ async function scraperStatuses() {
       };
     })
   );
+}
+
+/**
+ * SCORE_CALCULATOR não é uma fonte de coleta (não está em SCRAPER_SOURCES,
+ * de propósito — não faz sentido misturar "scraper de dados" com "job de
+ * processamento" nessa lista), mas o usuário precisa ver quando rodou pela
+ * última vez, então entra como uma entrada extra no mesmo array.
+ */
+async function scoreCalculatorStatus() {
+  const lastLog = await prisma.scraperLog.findFirst({
+    where: { source: "SCORE_CALCULATOR" },
+    orderBy: { createdAt: "desc" },
+  });
+
+  return {
+    source: "SCORE_CALCULATOR",
+    label: "Score Calculator",
+    lastRun: lastLog
+      ? { at: lastLog.createdAt.toISOString(), status: lastLog.status, itemsFound: lastLog.itemsFound }
+      : null,
+    nextRun: null, // cron "triggered" — libera quando a barreira do ciclo termina, não em horário fixo
+  };
 }
 
 async function lastCycleStatus() {
@@ -90,10 +126,11 @@ async function lastCycleStatus() {
 healthRouter.get("/", async (_req, res) => {
   res.setHeader("Cache-Control", "no-store");
 
-  const [database, redis, scrapers, lastCycle] = await Promise.all([
+  const [database, redis, scrapers, scoreCalculator, lastCycle] = await Promise.all([
     checkDatabase(),
     checkRedis(),
     scraperStatuses(),
+    scoreCalculatorStatus(),
     lastCycleStatus(),
   ]);
 
@@ -104,6 +141,6 @@ healthRouter.get("/", async (_req, res) => {
     timestamp: new Date().toISOString(),
     components: { database, redis },
     lastCycle,
-    scrapers,
+    scrapers: [...scrapers, scoreCalculator],
   });
 });

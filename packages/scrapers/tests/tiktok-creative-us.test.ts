@@ -1,7 +1,18 @@
-import { describe, expect, it } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
+
+const { findFirstMock, createMock } = vi.hoisted(() => ({
+  findFirstMock: vi.fn(),
+  createMock: vi.fn(),
+}));
+
+vi.mock("@shopspy/database", () => ({
+  prisma: { referenceVideo: { findFirst: findFirstMock, create: createMock } },
+}));
+
 import {
   mapIndustryToCategory,
   normalizeCreativeCenterCard,
+  persistReferenceVideos,
   type RawCreativeCenterCard,
 } from "../src/global/tiktok-creative-us";
 
@@ -48,5 +59,32 @@ describe("normalizeCreativeCenterCard", () => {
     const result = normalizeCreativeCenterCard(card, "UK");
     expect(result.tiktokImpressions).toBe(850_000);
     expect(result.tiktokCTR).toBeUndefined();
+  });
+});
+
+describe("persistReferenceVideos", () => {
+  beforeEach(() => {
+    findFirstMock.mockReset().mockResolvedValue(null);
+    createMock.mockReset().mockResolvedValue({});
+  });
+
+  it("cria uma ReferenceVideo por URL coletada, com platform tiktok e a região do card", async () => {
+    await persistReferenceVideos("p1", ["https://tiktok.com/video/1", "https://tiktok.com/video/2"], "US");
+
+    expect(createMock).toHaveBeenCalledTimes(2);
+    expect(createMock).toHaveBeenCalledWith({
+      data: { productId: "p1", url: "https://tiktok.com/video/1", platform: "tiktok", region: "US" },
+    });
+    expect(createMock).toHaveBeenCalledWith({
+      data: { productId: "p1", url: "https://tiktok.com/video/2", platform: "tiktok", region: "US" },
+    });
+  });
+
+  it("não duplica: pula URLs que já existem pra esse produto (findFirst encontra algo)", async () => {
+    findFirstMock.mockResolvedValueOnce({ id: "existing" });
+
+    await persistReferenceVideos("p1", ["https://tiktok.com/video/1"], "US");
+
+    expect(createMock).not.toHaveBeenCalled();
   });
 });

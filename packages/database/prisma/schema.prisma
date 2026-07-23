@@ -282,4 +282,5 @@ enum ScraperSource {
   ALIEXPRESS_GLOBAL
   VIDEOS_US
   VIDEOS_BR
+  SCORE_CALCULATOR // não é scraper de coleta, é o job de processamento — logado aqui pra aparecer no /health
 }

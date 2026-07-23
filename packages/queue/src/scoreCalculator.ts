@@ -42,6 +42,42 @@ function blendGlobalIndex(usIndex: number | null, ukIndex: number | null): numbe
  * nunca inventamos um número pra preencher a lacuna.
  */
 export async function runScoreCalculator(): Promise<ScoreCalculatorResult> {
+  const startedAt = Date.now();
+
+  try {
+    const result = await calculateScores();
+    await prisma.scraperLog.create({
+      data: {
+        source: "SCORE_CALCULATOR",
+        region: "GLOBAL",
+        status: result.errors.length > 0 ? "partial" : "success",
+        itemsFound: result.itemsFound,
+        itemsNew: result.itemsNew,
+        itemsUpdated: result.itemsUpdated,
+        duration: Date.now() - startedAt,
+        error: result.errors.length > 0 ? result.errors.join("; ") : null,
+      },
+    });
+    return result;
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error);
+    await prisma.scraperLog.create({
+      data: {
+        source: "SCORE_CALCULATOR",
+        region: "GLOBAL",
+        status: "error",
+        itemsFound: 0,
+        itemsNew: 0,
+        itemsUpdated: 0,
+        duration: Date.now() - startedAt,
+        error: message,
+      },
+    });
+    throw error;
+  }
+}
+
+async function calculateScores(): Promise<ScoreCalculatorResult> {
   const { weekNumber, year } = isoWeek(new Date());
 
   const products = await prisma.product.findMany({

@@ -1,15 +1,19 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { productFindManyMock, trendScoreFindManyMock, trendScoreUpsertMock } = vi.hoisted(() => ({
-  productFindManyMock: vi.fn(),
-  trendScoreFindManyMock: vi.fn(),
-  trendScoreUpsertMock: vi.fn(),
-}));
+const { productFindManyMock, trendScoreFindManyMock, trendScoreUpsertMock, scraperLogCreateMock } = vi.hoisted(
+  () => ({
+    productFindManyMock: vi.fn(),
+    trendScoreFindManyMock: vi.fn(),
+    trendScoreUpsertMock: vi.fn(),
+    scraperLogCreateMock: vi.fn(),
+  })
+);
 
 vi.mock("@shopspy/database", () => ({
   prisma: {
     product: { findMany: productFindManyMock },
     trendScore: { findMany: trendScoreFindManyMock, upsert: trendScoreUpsertMock },
+    scraperLog: { create: scraperLogCreateMock },
   },
 }));
 
@@ -35,6 +39,7 @@ describe("runScoreCalculator — integração com @shopspy/scorer", () => {
     productFindManyMock.mockReset();
     trendScoreFindManyMock.mockReset().mockResolvedValue([]);
     trendScoreUpsertMock.mockReset().mockResolvedValue({});
+    scraperLogCreateMock.mockReset().mockResolvedValue({});
   });
 
   it("pontua produto com rank Amazon usando o Score Engine real e grava em TrendScore com scoreTotal > 0", async () => {
@@ -99,5 +104,30 @@ describe("runScoreCalculator — integração com @shopspy/scorer", () => {
     const created = trendScoreUpsertMock.mock.calls[0]![0].create;
     expect(created.weeklyChangeUS).toBe(0);
     expect(created.weeklyChangeBR).toBe(0);
+  });
+
+  it("grava um ScraperLog com source SCORE_CALCULATOR ao terminar — pra aparecer em /health", async () => {
+    productFindManyMock.mockResolvedValue([fakeProduct()]);
+
+    await runScoreCalculator();
+
+    expect(scraperLogCreateMock).toHaveBeenCalledTimes(1);
+    const log = scraperLogCreateMock.mock.calls[0]![0].data;
+    expect(log.source).toBe("SCORE_CALCULATOR");
+    expect(log.region).toBe("GLOBAL");
+    expect(log.status).toBe("success");
+    expect(log.itemsFound).toBe(1);
+  });
+
+  it("se o cálculo lançar antes de terminar, grava ScraperLog com status error e propaga o erro", async () => {
+    productFindManyMock.mockRejectedValue(new Error("banco indisponível"));
+
+    await expect(runScoreCalculator()).rejects.toThrow("banco indisponível");
+
+    expect(scraperLogCreateMock).toHaveBeenCalledTimes(1);
+    const log = scraperLogCreateMock.mock.calls[0]![0].data;
+    expect(log.source).toBe("SCORE_CALCULATOR");
+    expect(log.status).toBe("error");
+    expect(log.error).toContain("banco indisponível");
   });
 });

@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "ScraperSource" ADD VALUE 'SCORE_CALCULATOR';

@@ -66,7 +66,7 @@ export async function upsertProductFromBR(
  */
 export async function upsertProductFromGlobal(
   parsed: ParsedGlobalProduct
-): Promise<{ created: boolean }> {
+): Promise<{ created: boolean; productId: string }> {
   const nameNormalized = normalizeProductName(parsed.name);
 
   const existing = await prisma.product.findFirst({
@@ -98,10 +98,10 @@ export async function upsertProductFromGlobal(
         firstSeenUS: existing.firstSeenUS ?? new Date(),
       },
     });
-    return { created: false };
+    return { created: false, productId: existing.id };
   }
 
-  await prisma.product.create({
+  const product = await prisma.product.create({
     data: {
       name: parsed.name,
       nameEn: parsed.name,
@@ -113,5 +113,5 @@ export async function upsertProductFromGlobal(
       ...globalFields,
     },
   });
-  return { created: true };
+  return { created: true, productId: product.id };
 }

@@ -28,6 +28,12 @@ export const productsListQuerySchema = z.object({
 
 export type ProductsListQuery = z.infer<typeof productsListQuerySchema>;
 
+export const opportunitiesTopQuerySchema = z.object({
+  filter: z.enum(["new48h"]).optional(),
+});
+
+export type OpportunitiesTopQuery = z.infer<typeof opportunitiesTopQuerySchema>;
+
 export const createAlertSchema = z.object({
   productId: z.string().regex(ID_PATTERN, "productId inválido"),
   threshold: z.coerce

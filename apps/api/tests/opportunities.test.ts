@@ -66,4 +66,47 @@ describe("GET /api/v1/opportunities/top", () => {
     const res = await request(buildApp()).get("/api/v1/opportunities/top");
     expect(res.status).toBe(401);
   });
+
+  describe("?filter=new48h", () => {
+    it("ordena pelo score mais recente e limita a 6, sem tocar em TrendScore.findMany", async () => {
+      productFindManyMock.mockResolvedValue([
+        { id: "p-low", scores: [{ scoreTotal: 30 }], videos: [] },
+        { id: "p-high", scores: [{ scoreTotal: 90 }], videos: [] },
+      ]);
+
+      const token = await signAccessToken({ sub: "u1", email: "pro@shopspy.com", plan: "PRO", name: null, avatarUrl: null });
+      const res = await request(buildApp())
+        .get("/api/v1/opportunities/top?filter=new48h")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(trendScoreFindManyMock).not.toHaveBeenCalled();
+      expect(productFindManyMock).toHaveBeenCalledWith(
+        expect.objectContaining({ where: { createdAt: { gte: expect.any(Date) } } })
+      );
+      expect(res.body.items.map((p: { id: string }) => p.id)).toEqual(["p-high", "p-low"]);
+      expect(res.body.delayedAt).toBeNull();
+    });
+
+    it("sem produtos novos nas últimas 48h: devolve array vazio, não erro", async () => {
+      productFindManyMock.mockResolvedValue([]);
+
+      const token = await signAccessToken({ sub: "u1", email: "pro@shopspy.com", plan: "PRO", name: null, avatarUrl: null });
+      const res = await request(buildApp())
+        .get("/api/v1/opportunities/top?filter=new48h")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(200);
+      expect(res.body.items).toEqual([]);
+    });
+
+    it("filter inválido: 400 de validação", async () => {
+      const token = await signAccessToken({ sub: "u1", email: "pro@shopspy.com", plan: "PRO", name: null, avatarUrl: null });
+      const res = await request(buildApp())
+        .get("/api/v1/opportunities/top?filter=bogus")
+        .set("Authorization", `Bearer ${token}`);
+
+      expect(res.status).toBe(400);
+    });
+  });
 });

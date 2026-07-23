@@ -1,5 +1,6 @@
 import type { Page } from "puppeteer";
 import puppeteer from "puppeteer";
+import { prisma } from "@shopspy/database";
 import type { Category } from "@shopspy/shared";
 import { pickUserAgent } from "../shared/userAgents";
 import { RateLimiter } from "../shared/rateLimiter";
@@ -114,6 +115,24 @@ async function extractTopProducts(page: Page, geo: string): Promise<RawCreativeC
   });
 }
 
+/**
+ * Grava as URLs de vídeo coletadas como ReferenceVideo — dedupe por
+ * (productId, url) pra não acumular linhas idênticas a cada execução diária
+ * do cron. hook/scriptPt/ugcPrompt ficam null até o scraper de vídeos
+ * dedicado (Fase futura) rodar a análise por IA.
+ */
+export async function persistReferenceVideos(
+  productId: string,
+  videoUrls: string[],
+  region: GlobalRegion
+): Promise<void> {
+  for (const url of videoUrls) {
+    const existing = await prisma.referenceVideo.findFirst({ where: { productId, url } });
+    if (existing) continue;
+    await prisma.referenceVideo.create({ data: { productId, url, platform: "tiktok", region } });
+  }
+}
+
 export async function runTikTokCreativeCenterScraper(): Promise<ScraperRunResult> {
   return withScraperLog("TIKTOK_CREATIVE_US", "GLOBAL", async () => {
     const limiter = new RateLimiter(MIN_DELAY_MS);
@@ -135,9 +154,12 @@ export async function runTikTokCreativeCenterScraper(): Promise<ScraperRunResult
 
           itemsFound += items.length;
           for (const item of items) {
-            const { created } = await upsertProductFromGlobal(item);
+            const { created, productId } = await upsertProductFromGlobal(item);
             if (created) itemsNew++;
             else itemsUpdated++;
+            if (item.videoUrls?.length) {
+              await persistReferenceVideos(productId, item.videoUrls, region);
+            }
           }
         } catch (error) {
           errors.push(`${region}: ${error instanceof Error ? error.message : String(error)}`);
