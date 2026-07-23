@@ -16,7 +16,8 @@ import { WindowBadge } from "../../components/WindowBadge";
 import { SparklineChart } from "../../components/SparklineChart";
 import { VideoGrid } from "../../components/VideoGrid";
 import { UGCScriptModal } from "../../components/UGCScriptModal";
-import { ImagePlaceholderIcon, LockIcon } from "../../components/icons";
+import { LockIcon } from "../../components/icons";
+import { ProductImage } from "../../components/ProductImage";
 
 const CLASSIFICATION_FILTERS: Array<{ value: ScoreClass | "ALL"; label: string }> = [
   { value: "ALL", label: "Todos" },
@@ -146,13 +147,7 @@ export default function OpportunitiesPage() {
                         <td className="px-4 py-3">
                           <div className="flex items-center gap-3">
                             <div className="h-10 w-10 shrink-0 overflow-hidden rounded-md bg-zinc-800">
-                              {product.imageUrl ? (
-                                <img src={product.imageUrl} alt="" className="h-full w-full object-cover" />
-                              ) : (
-                                <span className="flex h-full w-full items-center justify-center text-zinc-600">
-                                  <ImagePlaceholderIcon className="h-4 w-4" />
-                                </span>
-                              )}
+                              <ProductImage src={product.imageUrl} name={product.name} size={40} />
                             </div>
                             <div className="flex flex-col gap-0.5">
                               <a href={`/products/${product.id}`} className="font-medium text-zinc-100 hover:text-indigo-300">

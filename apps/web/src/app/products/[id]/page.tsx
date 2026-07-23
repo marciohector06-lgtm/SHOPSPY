@@ -11,6 +11,7 @@ import { OpportunityBadge } from "../../../components/OpportunityBadge";
 import { WindowBadge } from "../../../components/WindowBadge";
 import { VideoGrid } from "../../../components/VideoGrid";
 import { UGCScriptModal } from "../../../components/UGCScriptModal";
+import { ProductImage } from "../../../components/ProductImage";
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
@@ -45,12 +46,17 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
           return (
             <>
               <div className="flex flex-wrap items-start justify-between gap-3">
-                <div>
-                  <h1 className="text-xl font-semibold text-zinc-100">{product.name}</h1>
-                  <p className="text-sm text-zinc-500">{formatCategory(product.category)}</p>
-                  <div className="mt-2 flex items-center gap-2">
-                    {latestScore && <OpportunityBadge classification={latestScore.classification} />}
-                    <WindowBadge label={latestScore?.windowLabel ?? null} />
+                <div className="flex items-start gap-4">
+                  <div className="h-16 w-16 shrink-0 overflow-hidden rounded-lg bg-zinc-800">
+                    <ProductImage src={product.imageUrl} name={product.name} size={64} />
+                  </div>
+                  <div>
+                    <h1 className="text-xl font-semibold text-zinc-100">{product.name}</h1>
+                    <p className="text-sm text-zinc-500">{formatCategory(product.category)}</p>
+                    <div className="mt-2 flex items-center gap-2">
+                      {latestScore && <OpportunityBadge classification={latestScore.classification} />}
+                      <WindowBadge label={latestScore?.windowLabel ?? null} />
+                    </div>
                   </div>
                 </div>
                 <button
