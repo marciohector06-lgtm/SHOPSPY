@@ -108,12 +108,6 @@ export function createScraperWorker(connection: ConnectionOptions, redis: Redis)
     QUEUE_NAME,
     async (job: Job) => {
       const source = job.name;
-      if (source === "SCORE_CALCULATOR") {
-        // Fase 5's scoreProduct() é chamado produto a produto pelo
-        // orquestrador — aqui só delimitamos o job em si.
-        return { itemsFound: 0, itemsNew: 0, itemsUpdated: 0, errors: [] };
-      }
-
       const runner = SCRAPER_RUNNERS[source];
       if (!runner) throw new Error(`Sem runner registrado para ${source}`);
 

@@ -12,6 +12,7 @@ import {
   type ScraperRunResult,
 } from "@shopspy/scrapers";
 import { runAlertChecker } from "./alertChecker";
+import { runScoreCalculator } from "./scoreCalculator";
 
 export type ScraperRunner = () => Promise<ScraperRunResult>;
 
@@ -41,6 +42,7 @@ export const SCRAPER_RUNNERS: Record<string, ScraperRunner> = {
   VIDEOS_US: NOT_IMPLEMENTED("VIDEOS_US"),
   VIDEOS_BR: NOT_IMPLEMENTED("VIDEOS_BR"),
   ALERT_CHECKER: runAlertChecker,
+  SCORE_CALCULATOR: runScoreCalculator,
 };
 
 export function isKnownSource(source: string): boolean {

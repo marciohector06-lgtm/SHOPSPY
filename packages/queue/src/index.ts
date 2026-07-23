@@ -9,4 +9,5 @@ export { RedisJobLock } from "./redisJobLock";
 export { publishStatus, STATUS_CHANNEL, type ScraperStatusMessage, type ScraperState } from "./statusPublisher";
 export { computeBackoffDelay, MAX_ATTEMPTS, JOB_TIMEOUT_MS, MAX_CONCURRENT_SCRAPERS } from "./retryBackoff";
 export { runAlertChecker, type AlertCheckResult } from "./alertChecker";
+export { runScoreCalculator, type ScoreCalculatorResult } from "./scoreCalculator";
 export { sendEmail, type SendEmailResult } from "./resend";
