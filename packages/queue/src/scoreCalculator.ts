@@ -89,7 +89,9 @@ async function scoreOneProduct(product: Product, ctx: ScoreContext): Promise<1 |
     globalIndexFromRank(product.amazonRankUS),
     globalIndexFromRank(product.amazonRankUK)
   );
-  const trendsBR = 0; // sem Google Trends BR povoado ainda
+  // searchesBR é preenchido pelo GOOGLE_TRENDS_BR (0-100, mesma escala do
+  // Trends) — 0 só quando o produto ainda não teve trends BR coletado.
+  const trendsBR = product.searchesBR ?? 0;
 
   const previous = ctx.previousByProduct.get(product.id);
   const weeklyChangeUS =

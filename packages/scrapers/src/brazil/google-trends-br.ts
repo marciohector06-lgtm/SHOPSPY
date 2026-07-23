@@ -5,10 +5,16 @@ import type { ScraperRunResult } from "../shared/types";
 
 export { parseGoogleTrendsResponse, chunkKeywords, type TrendsSummary } from "../shared/trends";
 
-export async function runGoogleTrendsBRScraper(): Promise<ScraperRunResult> {
+/**
+ * `productIds`: quando informado, roda só pra esses produtos em vez de
+ * "todo MONITORING/OPPORTUNITY" — usado pra evitar rate limit da API
+ * não-oficial do Google Trends ao atualizar só um lote reduzido (ex.: top
+ * N por score) em vez do catálogo inteiro de uma vez.
+ */
+export async function runGoogleTrendsBRScraper(productIds?: string[]): Promise<ScraperRunResult> {
   return withScraperLog("GOOGLE_TRENDS_BR", "BR", async () => {
     const products = await prisma.product.findMany({
-      where: { status: { in: ["MONITORING", "OPPORTUNITY"] } },
+      where: productIds ? { id: { in: productIds } } : { status: { in: ["MONITORING", "OPPORTUNITY"] } },
       select: { id: true, name: true },
     });
 
