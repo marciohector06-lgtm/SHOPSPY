@@ -45,7 +45,7 @@ export function EmailPasswordLogin() {
         return;
       }
 
-      router.push("/opportunities");
+      router.push("/explorar");
       router.refresh();
     } catch {
       setError("Não foi possível conectar. Tente novamente.");

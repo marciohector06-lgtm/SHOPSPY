@@ -5,7 +5,7 @@ import { LoginCard } from "../../components/login/LoginCard";
 
 export default async function LoginPage() {
   const user = await getCurrentUser();
-  if (user) redirect("/opportunities");
+  if (user) redirect("/explorar");
 
   return <AuthHeroLayout rightCard={<LoginCard />} />;
 }

@@ -5,7 +5,7 @@ import { RegisterCard } from "../../components/login/RegisterCard";
 
 export default async function RegisterPage() {
   const user = await getCurrentUser();
-  if (user) redirect("/opportunities");
+  if (user) redirect("/explorar");
 
   return <AuthHeroLayout rightCard={<RegisterCard />} />;
 }

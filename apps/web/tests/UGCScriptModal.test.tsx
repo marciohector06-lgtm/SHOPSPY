@@ -17,6 +17,7 @@ vi.mock("../src/lib/api", () => ({
 }));
 
 import { UGCScriptModal } from "../src/components/UGCScriptModal";
+import { streamScript } from "../src/lib/api";
 
 describe("<UGCScriptModal />", () => {
   it("renderiza as 5 seções do roteiro (gancho, problema, produto, prova, cta)", async () => {
@@ -50,5 +51,18 @@ describe("<UGCScriptModal />", () => {
       <UGCScriptModal productId="p1" productName="Produto X" isOpen={false} onClose={() => {}} />
     );
     expect(container.textContent).toBe("");
+  });
+});
+
+describe("<UGCScriptModal /> sem GEMINI_API_KEY configurada", () => {
+  it("mostra a mensagem informativa em vez de um acordeão vazio", async () => {
+    vi.mocked(streamScript).mockImplementationOnce(async (_id, onChunk) => {
+      onChunk("Roteiro UGC disponível após configurar a API do Gemini.");
+    });
+
+    render(<UGCScriptModal productId="p1" productName="Produto X" isOpen onClose={() => {}} />);
+
+    expect(await screen.findByText("Roteiro UGC disponível após configurar a API do Gemini.")).toBeTruthy();
+    expect(screen.queryByText(/Gancho \(0-3s\)/)).toBeNull();
   });
 });

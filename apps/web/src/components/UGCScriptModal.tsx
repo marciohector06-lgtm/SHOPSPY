@@ -83,6 +83,10 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
 
   const sections = splitSections(text);
   const flowPrompts = parseFlowPrompts(sections[FLOW_MARKER]);
+  // Sem seções reconhecidas depois que o streaming termina: ou o Gemini não
+  // está configurado, ou a API respondeu algo fora do formato esperado — nos
+  // dois casos, mostrar o texto cru é melhor que um acordeão vazio.
+  const plainMessage = !streaming && Object.keys(sections).length === 0 ? text.trim() : null;
 
   function copyPrompt(prompt: string, index: number) {
     void navigator.clipboard.writeText(prompt);
@@ -121,27 +125,33 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
             </p>
           )}
 
-          <div className="flex flex-col gap-2">
-            {SCRIPT_MARKERS.map((marker) => (
-              <div key={marker} className="rounded-lg border border-spy-border">
-                <button
-                  type="button"
-                  onClick={() => setOpenSections((prev) => ({ ...prev, [marker]: !prev[marker] }))}
-                  className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium text-spy-text"
-                >
-                  {SECTION_LABELS[marker]}
-                  <span className="text-spy-muted">{openSections[marker] ? "▾" : "▸"}</span>
-                </button>
-                {openSections[marker] && (
-                  <p className="border-t border-spy-border px-3 py-2 text-sm leading-relaxed text-spy-muted">
-                    {sections[marker] || (streaming ? "…" : "—")}
-                  </p>
-                )}
-              </div>
-            ))}
-          </div>
+          {plainMessage ? (
+            <p className="rounded-lg border border-spy-border bg-spy-surface px-4 py-3 text-sm text-spy-muted">
+              {plainMessage}
+            </p>
+          ) : (
+            <div className="flex flex-col gap-2">
+              {SCRIPT_MARKERS.map((marker) => (
+                <div key={marker} className="rounded-lg border border-spy-border">
+                  <button
+                    type="button"
+                    onClick={() => setOpenSections((prev) => ({ ...prev, [marker]: !prev[marker] }))}
+                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium text-spy-text"
+                  >
+                    {SECTION_LABELS[marker]}
+                    <span className="text-spy-muted">{openSections[marker] ? "▾" : "▸"}</span>
+                  </button>
+                  {openSections[marker] && (
+                    <p className="border-t border-spy-border px-3 py-2 text-sm leading-relaxed text-spy-muted">
+                      {sections[marker] || (streaming ? "…" : "—")}
+                    </p>
+                  )}
+                </div>
+              ))}
+            </div>
+          )}
 
-          {(flowPrompts.length > 0 || streaming) && (
+          {!plainMessage && (flowPrompts.length > 0 || streaming) && (
             <div className="mt-4 rounded-lg border border-spy-indigo/30 bg-spy-indigo-dim p-3">
               <h3 className="mb-2 text-xs font-semibold uppercase tracking-wide text-spy-indigo-light">
                 Prompts Google Flow

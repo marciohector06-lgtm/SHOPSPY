@@ -73,8 +73,8 @@ export function fetchProducts(params: FetchProductsParams = {}, token?: string):
   return fetchJson<ProductsPage>(`/api/v1/products${query ? `?${query}` : ""}`, { cache: "no-store" }, token);
 }
 
-export function fetchProduct(id: string): Promise<ProductDetail> {
-  return fetchJson<ProductDetail>(`/api/v1/products/${id}`);
+export function fetchProduct(id: string, token?: string): Promise<ProductDetail> {
+  return fetchJson<ProductDetail>(`/api/v1/products/${id}`, { cache: "no-store" }, token);
 }
 
 export function fetchHealth(): Promise<HealthResponse> {

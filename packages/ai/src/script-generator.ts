@@ -99,7 +99,7 @@ export async function* streamUGCScript(input: UGCScriptInput): AsyncGenerator<st
     }
   } catch (error) {
     if (error instanceof GeminiUnavailableError) {
-      yield "Roteiro indisponível: configure GEMINI_API_KEY para gerar em tempo real.";
+      yield "Roteiro UGC disponível após configurar a API do Gemini.";
       return;
     }
     throw error;
