@@ -9,3 +9,12 @@ export async function getCurrentUser(): Promise<AccessTokenPayload | null> {
   if (!token) return null;
   return verifyAccessToken(token);
 }
+
+/**
+ * O token bruto (não decodificado) — Server Components rodam no Node, sem
+ * o cookie jar do browser, então um fetch pra API precisa reenviar isso
+ * manualmente como "Authorization: Bearer" (authMiddleware aceita os dois).
+ */
+export function getAccessTokenCookie(): string | undefined {
+  return cookies().get(ACCESS_COOKIE_NAME)?.value;
+}

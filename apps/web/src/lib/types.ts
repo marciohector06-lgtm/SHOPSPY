@@ -79,6 +79,7 @@ export interface ReferenceVideo {
 
 export interface ScraperStatusEntry {
   source: string;
+  label: string;
   lastRun: { at: string; status: string; itemsFound: number } | null;
   nextRun: string | null;
 }

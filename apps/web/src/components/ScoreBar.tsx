@@ -11,7 +11,7 @@ interface ScoreBarProps {
 // Faixas de cor por valor (não por classificação de negócio — essa é a do
 // OpportunityBadge/TrendScore.classification, um sinal diferente e mais
 // nuançado). 0-49 cinza, 50-64 âmbar, 65-79 verde, 80+ rosa.
-function scoreColor(score: number): { bar: string; text: string } {
+export function scoreColor(score: number): { bar: string; text: string } {
   if (score >= 80) return { bar: "bg-spy-max", text: "text-spy-max" };
   if (score >= 65) return { bar: "bg-spy-high", text: "text-spy-high" };
   if (score >= 50) return { bar: "bg-spy-medium", text: "text-spy-medium" };

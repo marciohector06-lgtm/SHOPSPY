@@ -22,12 +22,21 @@ export class ApiError extends Error {
   }
 }
 
-async function fetchJson<T>(path: string, init?: RequestInit): Promise<T> {
+/**
+ * `token`, quando passado, vira "Authorization: Bearer" — necessário pra
+ * Server Components (Node.js, sem o cookie jar do browser); no client,
+ * `credentials:"include"` já basta e `token` fica de fora.
+ */
+async function fetchJson<T>(path: string, init?: RequestInit, token?: string): Promise<T> {
   let response: Response;
   try {
     // credentials:"include" é o que faz o cookie httpOnly de sessão viajar
     // até a API (domínios diferentes em produção, mesma "host" em dev).
-    response = await fetch(`${API_BASE_URL}${path}`, { ...init, credentials: "include" });
+    response = await fetch(`${API_BASE_URL}${path}`, {
+      ...init,
+      credentials: "include",
+      headers: { ...init?.headers, ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    });
   } catch {
     throw new ApiError("Não foi possível conectar à API. Verifique sua conexão e tente novamente.");
   }
@@ -72,17 +81,25 @@ export function fetchHealth(): Promise<HealthResponse> {
   return fetchJson<HealthResponse>("/api/v1/health", { cache: "no-store" });
 }
 
-export function fetchDashboardSummary(): Promise<DashboardSummary> {
-  return fetchJson<DashboardSummary>("/api/v1/dashboard/summary");
+export function fetchDashboardSummary(token?: string): Promise<DashboardSummary> {
+  return fetchJson<DashboardSummary>("/api/v1/dashboard/summary", { cache: "no-store" }, token);
 }
 
-export function fetchCategoryTrends(): Promise<CategoryTrendsResponse> {
-  return fetchJson<CategoryTrendsResponse>("/api/v1/dashboard/category-trends");
+export function fetchCategoryTrends(token?: string): Promise<CategoryTrendsResponse> {
+  return fetchJson<CategoryTrendsResponse>("/api/v1/dashboard/category-trends", { cache: "no-store" }, token);
 }
 
-/** FREE recebe só o top 3 com `delayedAt` preenchido; PRO recebe tudo, em tempo real (delayedAt: null). */
-export function fetchTopOpportunities(): Promise<OpportunitiesTopResponse> {
-  return fetchJson<OpportunitiesTopResponse>("/api/v1/opportunities/top");
+/**
+ * FREE recebe só o top 3 com `delayedAt` preenchido; PRO recebe tudo, em
+ * tempo real (delayedAt: null). `filter: "new48h"` troca a ordenação por
+ * semana pra "criado nas últimas 48h", limitado a 6 (ver apps/api).
+ */
+export function fetchTopOpportunities(
+  params: { filter?: "new48h" } = {},
+  token?: string
+): Promise<OpportunitiesTopResponse> {
+  const query = params.filter ? `?filter=${params.filter}` : "";
+  return fetchJson<OpportunitiesTopResponse>(`/api/v1/opportunities/top${query}`, { cache: "no-store" }, token);
 }
 
 export function streamUrl(): string {
