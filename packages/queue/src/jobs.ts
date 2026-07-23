@@ -54,7 +54,7 @@ export async function enqueueScraper(
     source,
     {},
     {
-      jobId: `${source}:${Date.now()}`,
+      jobId: `${source}-${Date.now()}`,
       attempts: MAX_ATTEMPTS,
       backoff: { type: "custom" },
       removeOnComplete: true,
@@ -73,7 +73,7 @@ async function enqueueFollowupJob(
   const cycleId = todayCycleId();
   const queue = new Queue(QUEUE_NAME, { connection });
   try {
-    await queue.add(jobName, data, { jobId: `${jobName}:${cycleId}`, removeOnComplete: true });
+    await queue.add(jobName, data, { jobId: `${jobName}-${cycleId}`, removeOnComplete: true });
   } finally {
     await queue.close();
   }

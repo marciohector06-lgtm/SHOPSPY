@@ -162,6 +162,7 @@ Cookies de sessão são `httpOnly` com `Domain` explícito (`COOKIE_DOMAIN`) —
 | `INTERNAL_TOKEN` | Railway (API + Worker) | gere você: `openssl rand -hex 24` — protege `POST /internal/jobs/:source/trigger` |
 | `NEXT_PUBLIC_API_URL` | Vercel | URL pública da API |
 | `EXCHANGE_RATE_API_URL` | Railway (Worker) | fixo, já vem preenchido no `.env.example` |
+| `PUPPETEER_EXECUTABLE_PATH` | Railway (Worker) | `/run/current-system/sw/bin/chromium` — Chromium vem do `nixpacks.toml` (`nixPkgs`), necessário pros scrapers de TikTok (Shop BR/US e Creative Center) |
 | `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` | Railway (Worker) | [portals.aliexpress.com/affiportals](https://portals.aliexpress.com/affiportals) |
 | `RESEND_API_KEY` | Railway (Worker) | Resend → API Keys (seção 4) |
 | `RESEND_FROM_EMAIL` | Railway (Worker) | domínio verificado no Resend, seção 4 |
