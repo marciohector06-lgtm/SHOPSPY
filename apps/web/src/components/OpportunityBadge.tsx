@@ -8,7 +8,7 @@ export const CLASSIFICATION_LABELS: Record<ScoreClass, string> = {
   AVOID: "Evitar",
 };
 
-const COLORS: Record<ScoreClass, string> = {
+export const CLASSIFICATION_COLORS: Record<ScoreClass, string> = {
   MAXIMUM: "bg-spy-max/15 text-spy-max ring-spy-max/30",
   HIGH: "bg-spy-high/15 text-spy-high ring-spy-high/30",
   MEDIUM: "bg-spy-medium/15 text-spy-medium ring-spy-medium/30",
@@ -19,7 +19,7 @@ const COLORS: Record<ScoreClass, string> = {
 export function OpportunityBadge({ classification }: { classification: ScoreClass }) {
   return (
     <span
-      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${COLORS[classification]}`}
+      className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${CLASSIFICATION_COLORS[classification]}`}
     >
       {CLASSIFICATION_LABELS[classification]}
     </span>

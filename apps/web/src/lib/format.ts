@@ -13,6 +13,18 @@ export function formatPercent(value: number | null | undefined, digits = 0): str
   return `${value >= 0 ? "+" : ""}${value.toFixed(digits)}%`;
 }
 
+export function formatRelativeMinutes(iso: string | null | undefined): string {
+  if (!iso) return "—";
+  const diffMs = Date.now() - new Date(iso).getTime();
+  const minutes = Math.max(0, Math.round(diffMs / 60_000));
+  if (minutes < 1) return "agora mesmo";
+  if (minutes < 60) return `há ${minutes} minuto${minutes === 1 ? "" : "s"}`;
+  const hours = Math.round(minutes / 60);
+  if (hours < 24) return `há ${hours} hora${hours === 1 ? "" : "s"}`;
+  const days = Math.round(hours / 24);
+  return `há ${days} dia${days === 1 ? "" : "s"}`;
+}
+
 export function formatDate(iso: string | null | undefined): string {
   if (!iso) return "—";
   return new Intl.DateTimeFormat("pt-BR", { day: "2-digit", month: "2-digit", hour: "2-digit", minute: "2-digit" }).format(
