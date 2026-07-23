@@ -1,3 +1,5 @@
+import { ClockIcon } from "./icons";
+
 type WindowConfidence = "low" | "medium" | "high";
 
 // Nota: a API do componente aceita `label` pré-formatado (não `weeks`
@@ -30,7 +32,7 @@ export function WindowBadge({ label, confidence }: WindowBadgeProps) {
 
   return (
     <span className={`inline-flex items-center gap-1 rounded-full border bg-spy-surface px-2.5 py-0.5 text-xs font-medium ${borderClass}`}>
-      <span aria-hidden>⏰</span>
+      <ClockIcon className="h-3 w-3" />
       {label}
       {confidence && <span className="text-spy-muted"> • {CONFIDENCE_LABEL[confidence]}</span>}
     </span>

@@ -16,7 +16,7 @@ import { WindowBadge } from "./WindowBadge";
 import { UGCScriptModal } from "./UGCScriptModal";
 import { EmptyState } from "./ui/EmptyState";
 import { ErrorState } from "./ui/ErrorState";
-import { PackageIcon } from "./icons";
+import { PackageIcon, BoltIcon } from "./icons";
 
 type SortKey = "name" | "score" | "classification" | "window" | "commission" | "soldBR" | "rankAmazon" | "category";
 type SortDirection = "asc" | "desc";
@@ -168,7 +168,7 @@ export function ProductsTable({ initialItems, initialCursor }: ProductsTableProp
           type="search"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Buscar produto... 🔍"
+          placeholder="Buscar produto..."
           className="min-w-[180px] flex-1 rounded-md border border-spy-border bg-spy-surface px-2.5 py-1.5 text-xs text-spy-text placeholder:text-spy-faint"
         />
       </div>
@@ -229,8 +229,9 @@ export function ProductsTable({ initialItems, initialCursor }: ProductsTableProp
                         <button
                           type="button"
                           onClick={() => setScriptProduct(product)}
-                          className="whitespace-nowrap rounded-md border border-spy-border px-2.5 py-1 text-xs font-medium text-spy-text hover:border-spy-indigo/40 hover:text-spy-indigo-light"
+                          className="inline-flex items-center gap-1 whitespace-nowrap rounded-md border border-spy-border px-2.5 py-1 text-xs font-medium text-spy-text hover:border-spy-indigo/40 hover:text-spy-indigo-light"
                         >
+                          <BoltIcon className="h-3.5 w-3.5" />
                           Roteiro UGC
                         </button>
                       </td>

@@ -35,7 +35,7 @@ export default function DesignSystemPage() {
     <div className="min-h-screen bg-spy-base px-6 py-10 text-spy-text">
       <div className="mx-auto flex max-w-5xl flex-col gap-12">
         <header>
-          <h1 className="font-display text-2xl font-bold">🕵️ ShopSpy — Design System</h1>
+          <h1 className="font-display text-2xl font-bold">ShopSpy — Design System</h1>
           <p className="text-sm text-spy-muted">Componentes atômicos da Fase 2, todas as variações. Só dev, não requer login.</p>
         </header>
 
