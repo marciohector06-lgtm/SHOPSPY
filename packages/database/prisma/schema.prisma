@@ -158,6 +158,7 @@ model User {
   email       String    @unique
   name        String?
   avatarUrl   String?
+  passwordHash String?  // null para usuários que só entraram via Google OAuth
   plan        Plan      @default(FREE)
   planExpiresAt DateTime?
 

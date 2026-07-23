@@ -2,6 +2,7 @@
 
 import { useEffect, useState } from "react";
 import { streamScript } from "../lib/api";
+import { WarningIcon } from "./icons";
 
 interface UGCScriptModalProps {
   productId: string;
@@ -113,7 +114,12 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
         </header>
 
         <div className="flex-1 overflow-y-auto px-5 py-4">
-          {error && <p className="mb-3 text-sm text-red-400">⚠️ {error}</p>}
+          {error && (
+            <p className="mb-3 flex items-center gap-1.5 text-sm text-red-400">
+              <WarningIcon className="h-4 w-4" />
+              {error}
+            </p>
+          )}
 
           <div className="flex flex-col gap-2">
             {SCRIPT_MARKERS.map((marker) => (

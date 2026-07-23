@@ -1,7 +1,12 @@
+import { WarningIcon } from "../icons";
+
 export function ErrorState({ message, onRetry }: { message: string; onRetry: () => void }) {
   return (
     <div className="flex flex-col items-center justify-center gap-3 rounded-lg border border-red-900/40 bg-red-950/20 px-6 py-10 text-center">
-      <p className="text-sm text-red-300">⚠️ {message}</p>
+      <p className="flex items-center gap-1.5 text-sm text-red-300">
+        <WarningIcon className="h-4 w-4" />
+        {message}
+      </p>
       <button
         type="button"
         onClick={onRetry}

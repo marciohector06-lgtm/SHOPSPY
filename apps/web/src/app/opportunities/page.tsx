@@ -16,6 +16,7 @@ import { WindowBadge } from "../../components/WindowBadge";
 import { SparklineChart } from "../../components/SparklineChart";
 import { VideoGrid } from "../../components/VideoGrid";
 import { UGCScriptModal } from "../../components/UGCScriptModal";
+import { ImagePlaceholderIcon, LockIcon } from "../../components/icons";
 
 const CLASSIFICATION_FILTERS: Array<{ value: ScoreClass | "ALL"; label: string }> = [
   { value: "ALL", label: "Todos" },
@@ -59,8 +60,9 @@ export default function OpportunitiesPage() {
       </div>
 
       {state.status === "success" && state.data.delayedAt && (
-        <div className="rounded-lg border border-yellow-800/40 bg-yellow-950/20 px-4 py-2 text-sm text-yellow-200">
-          🔒 Plano FREE: mostrando as top 3 oportunidades com 48h de atraso (dados de {formatDate(state.data.delayedAt)}).{" "}
+        <div className="flex items-center gap-1.5 rounded-lg border border-yellow-800/40 bg-yellow-950/20 px-4 py-2 text-sm text-yellow-200">
+          <LockIcon className="h-4 w-4 shrink-0" />
+          Plano FREE: mostrando as top 3 oportunidades com 48h de atraso (dados de {formatDate(state.data.delayedAt)}).{" "}
           <a href="/pricing" className="font-medium underline hover:text-yellow-100">
             Assine o PRO
           </a>{" "}
@@ -147,7 +149,9 @@ export default function OpportunitiesPage() {
                               {product.imageUrl ? (
                                 <img src={product.imageUrl} alt="" className="h-full w-full object-cover" />
                               ) : (
-                                <span className="flex h-full w-full items-center justify-center text-lg">📦</span>
+                                <span className="flex h-full w-full items-center justify-center text-zinc-600">
+                                  <ImagePlaceholderIcon className="h-4 w-4" />
+                                </span>
                               )}
                             </div>
                             <div className="flex flex-col gap-0.5">

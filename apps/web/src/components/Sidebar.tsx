@@ -2,11 +2,12 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { DashboardIcon, LogoMark, TargetIcon, TrendingUpIcon } from "./icons";
 
 const NAV_ITEMS = [
-  { href: "/dashboard", label: "Dashboard", icon: "📊" },
-  { href: "/opportunities", label: "Oportunidades", icon: "🎯" },
-  { href: "/trends", label: "Tendências", icon: "📈" },
+  { href: "/dashboard", label: "Dashboard", Icon: DashboardIcon },
+  { href: "/opportunities", label: "Oportunidades", Icon: TargetIcon },
+  { href: "/trends", label: "Tendências", Icon: TrendingUpIcon },
 ];
 
 export function Sidebar() {
@@ -15,7 +16,7 @@ export function Sidebar() {
   return (
     <aside className="flex h-screen w-60 flex-col border-r border-zinc-800 bg-zinc-900/60">
       <div className="flex items-center gap-2 border-b border-zinc-800 px-5 py-5">
-        <span className="text-xl">🕵️</span>
+        <LogoMark className="h-5 w-5 text-indigo-400" />
         <span className="font-mono text-sm font-semibold tracking-wide text-zinc-100">ShopSpy</span>
       </div>
 
@@ -30,7 +31,7 @@ export function Sidebar() {
                 active ? "bg-indigo-500/15 text-indigo-300" : "text-zinc-400 hover:bg-zinc-800/60 hover:text-zinc-200"
               }`}
             >
-              <span aria-hidden>{item.icon}</span>
+              <item.Icon className="h-4 w-4" />
               {item.label}
             </Link>
           );

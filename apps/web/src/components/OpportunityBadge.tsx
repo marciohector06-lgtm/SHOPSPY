@@ -1,4 +1,4 @@
-import { CLASSIFICATION_EMOJI, type ScoreClass } from "@shopspy/shared";
+import type { ScoreClass } from "@shopspy/shared";
 
 const LABELS: Record<ScoreClass, string> = {
   MAXIMUM: "Máxima",
@@ -16,12 +16,20 @@ const COLORS: Record<ScoreClass, string> = {
   AVOID: "bg-zinc-500/15 text-zinc-400 ring-zinc-500/30",
 };
 
+const DOT_COLORS: Record<ScoreClass, string> = {
+  MAXIMUM: "bg-red-400",
+  HIGH: "bg-emerald-400",
+  MEDIUM: "bg-yellow-400",
+  SATURATING: "bg-orange-400",
+  AVOID: "bg-zinc-400",
+};
+
 export function OpportunityBadge({ classification }: { classification: ScoreClass }) {
   return (
     <span
-      className={`inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${COLORS[classification]}`}
+      className={`inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ${COLORS[classification]}`}
     >
-      <span aria-hidden>{CLASSIFICATION_EMOJI[classification]}</span>
+      <span className={`h-1.5 w-1.5 rounded-full ${DOT_COLORS[classification]}`} aria-hidden />
       {LABELS[classification]}
     </span>
   );

@@ -30,7 +30,7 @@ function formatBRL(value: number | null): string {
  * estilo inline é o que sobrevive no Gmail/Outlook.
  */
 export function renderOpportunityEmail(input: OpportunityEmailInput): RenderedEmail {
-  const subject = `🔥 ShopSpy — Nova oportunidade: ${input.productName}`;
+  const subject = `ShopSpy — Nova oportunidade: ${input.productName}`;
   const productUrl = `${input.appUrl}/products/${input.productId}`;
   const window = input.windowLabel ?? "não estimada";
 
@@ -43,7 +43,7 @@ export function renderOpportunityEmail(input: OpportunityEmailInput): RenderedEm
           <table role="presentation" width="480" cellpadding="0" cellspacing="0" style="background:#18181b;border-radius:12px;overflow:hidden;">
             <tr>
               <td style="padding:24px 32px;border-bottom:1px solid #27272a;">
-                <span style="color:#e4e4e7;font-size:18px;font-weight:bold;">🕵️ ShopSpy</span>
+                <span style="color:#e4e4e7;font-size:18px;font-weight:bold;">ShopSpy</span>
               </td>
             </tr>
             <tr>

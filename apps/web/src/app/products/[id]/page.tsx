@@ -64,7 +64,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
 
               <div className="grid grid-cols-1 gap-4 md:grid-cols-2">
                 <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-                  <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">🇧🇷 Brasil</h2>
+                  <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Brasil</h2>
                   <Stat label="Preço" value={formatBRL(product.priceBR)} />
                   <Stat label="Vendidos" value={formatCompactNumber(product.soldCountBR)} />
                   <Stat label="Avaliação" value={product.ratingBR ? `${product.ratingBR.toFixed(1)}★` : "—"} />
@@ -72,7 +72,7 @@ export default function ProductDetailPage({ params }: { params: { id: string } }
                 </div>
 
                 <div className="rounded-lg border border-zinc-800 bg-zinc-900/40 p-4">
-                  <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">🌎 Global</h2>
+                  <h2 className="mb-2 text-xs font-semibold uppercase tracking-wide text-zinc-500">Global</h2>
                   <Stat label="Impressões TikTok (US)" value={formatCompactNumber(product.tiktokImpressions)} />
                   <Stat label="CTR TikTok" value={formatPercent(product.tiktokCTR, 1)} />
                   <Stat label="Rank Amazon US" value={product.amazonRankUS ? `#${product.amazonRankUS}` : "—"} />

@@ -1,9 +1,5 @@
-import { cookies } from "next/headers";
 import { NextResponse, type NextRequest } from "next/server";
-import { ACCESS_COOKIE_NAME, REFRESH_COOKIE_NAME } from "@shopspy/shared";
-
-const ACCESS_MAX_AGE_SECONDS = 60 * 60;
-const REFRESH_MAX_AGE_SECONDS = 7 * 24 * 60 * 60;
+import { setAuthCookies } from "../../../lib/authCookies";
 
 /**
  * A API redireciona pra aqui com os tokens na query, depois do Google
@@ -19,26 +15,7 @@ export async function GET(request: NextRequest) {
     return NextResponse.redirect(new URL("/login?error=oauth_failed", request.url));
   }
 
-  const cookieStore = cookies();
-  const domain = process.env.COOKIE_DOMAIN || undefined;
-  const secure = process.env.NODE_ENV === "production";
-
-  cookieStore.set(ACCESS_COOKIE_NAME, accessToken, {
-    httpOnly: true,
-    secure,
-    sameSite: "strict",
-    path: "/",
-    domain,
-    maxAge: ACCESS_MAX_AGE_SECONDS,
-  });
-  cookieStore.set(REFRESH_COOKIE_NAME, refreshToken, {
-    httpOnly: true,
-    secure,
-    sameSite: "strict",
-    path: "/",
-    domain,
-    maxAge: REFRESH_MAX_AGE_SECONDS,
-  });
+  setAuthCookies(accessToken, refreshToken);
 
   return NextResponse.redirect(new URL("/dashboard", request.url));
 }

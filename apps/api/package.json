@@ -16,6 +16,7 @@
     "@shopspy/queue": "*",
     "@shopspy/shared": "*",
     "arctic": "^3.7.0",
+    "bcryptjs": "^2.4.3",
     "bullmq": "^5.80.10",
     "compression": "^1.7.4",
     "cookie-parser": "^1.4.7",
@@ -31,6 +32,7 @@
     "zod": "^3.23.8"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
     "@types/compression": "^1.7.5",
     "@types/cookie-parser": "^1.4.10",
     "@types/cors": "^2.8.17",

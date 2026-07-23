@@ -1,5 +1,6 @@
 import { formatCompactNumber } from "../lib/format";
 import type { ReferenceVideo } from "../lib/types";
+import { EyeIcon, HeartIcon, PlayIcon } from "./icons";
 
 interface VideoGridProps {
   videos: ReferenceVideo[];
@@ -29,7 +30,9 @@ export function VideoGrid({ videos, variant = "detailed", limit }: VideoGridProp
             {video.thumbnailUrl ? (
               <img src={video.thumbnailUrl} alt="" className="h-full w-full object-cover" />
             ) : (
-              <span className="flex h-full w-full items-center justify-center text-xs">🎬</span>
+              <span className="flex h-full w-full items-center justify-center text-zinc-600">
+                <PlayIcon className="h-4 w-4" />
+              </span>
             )}
           </a>
         ))}
@@ -51,13 +54,21 @@ export function VideoGrid({ videos, variant = "detailed", limit }: VideoGridProp
             {video.thumbnailUrl ? (
               <img src={video.thumbnailUrl} alt="" className="h-full w-full object-cover" />
             ) : (
-              <span className="flex h-full w-full items-center justify-center text-2xl">🎬</span>
+              <span className="flex h-full w-full items-center justify-center text-zinc-600">
+                <PlayIcon className="h-8 w-8" />
+              </span>
             )}
           </div>
           <div className="flex flex-col gap-1 p-3">
             <div className="flex gap-3 font-mono text-xs text-zinc-400">
-              <span>❤️ {formatCompactNumber(video.likes)}</span>
-              <span>👁️ {formatCompactNumber(video.views)}</span>
+              <span className="flex items-center gap-1">
+                <HeartIcon className="h-3.5 w-3.5" />
+                {formatCompactNumber(video.likes)}
+              </span>
+              <span className="flex items-center gap-1">
+                <EyeIcon className="h-3.5 w-3.5" />
+                {formatCompactNumber(video.views)}
+              </span>
             </div>
             {video.hook && <p className="text-xs leading-snug text-zinc-300">{video.hook}</p>}
           </div>
