@@ -1,6 +1,6 @@
 import { Router } from "express";
 import { prisma } from "@shopspy/database";
-import { CATEGORIES, isoWeek } from "@shopspy/shared";
+import { CATEGORIES, SCORE_CLASSES, isoWeek } from "@shopspy/shared";
 import { withCache } from "../lib/cache";
 
 export function createDashboardRouter(): Router {
@@ -74,16 +74,24 @@ export function createDashboardRouter(): Router {
   /**
    * Heatmap (todas as categorias, score médio da semana atual — null onde
    * não há dado, para o frontend distinguir "0" de "sem score ainda") +
-   * série BR vs Global das últimas 8 semanas para as top 5 categorias.
+   * série BR vs Global das últimas 8 semanas para as top 5 categorias +
+   * distribuição de produtos por classificação (semana atual).
    */
   router.get("/category-trends", async (_req, res) => {
     const data = await withCache(res, "dashboard:category-trends", 120, async () => {
       const { weekNumber, year } = isoWeek(new Date());
+      const previous = isoWeek(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
 
-      const thisWeekScores = await prisma.trendScore.findMany({
-        where: { weekNumber, year },
-        select: { scoreTotal: true, product: { select: { category: true } } },
-      });
+      const [thisWeekScores, previousWeekScores] = await Promise.all([
+        prisma.trendScore.findMany({
+          where: { weekNumber, year },
+          select: { scoreTotal: true, classification: true, product: { select: { category: true } } },
+        }),
+        prisma.trendScore.findMany({
+          where: { weekNumber: previous.weekNumber, year: previous.year },
+          select: { scoreTotal: true, product: { select: { category: true } } },
+        }),
+      ]);
 
       const heatmapTotals = new Map<string, { sum: number; count: number }>();
       for (const row of thisWeekScores) {
@@ -92,10 +100,36 @@ export function createDashboardRouter(): Router {
         entry.count += 1;
         heatmapTotals.set(row.product.category, entry);
       }
+
+      const previousHeatmapTotals = new Map<string, { sum: number; count: number }>();
+      for (const row of previousWeekScores) {
+        const entry = previousHeatmapTotals.get(row.product.category) ?? { sum: 0, count: 0 };
+        entry.sum += row.scoreTotal;
+        entry.count += 1;
+        previousHeatmapTotals.set(row.product.category, entry);
+      }
+
       const heatmap = CATEGORIES.map((category) => {
         const entry = heatmapTotals.get(category);
-        return { category, averageScore: entry ? entry.sum / entry.count : null };
+        const averageScore = entry ? entry.sum / entry.count : null;
+
+        const previousEntry = previousHeatmapTotals.get(category);
+        const previousAverage = previousEntry ? previousEntry.sum / previousEntry.count : null;
+        const weeklyChangePct =
+          averageScore !== null && previousAverage !== null && previousAverage > 0
+            ? ((averageScore - previousAverage) / previousAverage) * 100
+            : null;
+
+        return { category, averageScore, weeklyChangePct };
       });
+
+      const classificationDistribution = Object.fromEntries(SCORE_CLASSES.map((c) => [c, 0])) as Record<
+        (typeof SCORE_CLASSES)[number],
+        number
+      >;
+      for (const row of thisWeekScores) {
+        classificationDistribution[row.classification] += 1;
+      }
 
       // Amostra recente de linhas cruas (não só a semana atual) pra montar a
       // série histórica por categoria — agregada em memória, não em SQL, pelo
@@ -164,7 +198,7 @@ export function createDashboardRouter(): Router {
         };
       });
 
-      return { weeks: last8Weeks, categories, heatmap };
+      return { weeks: last8Weeks, categories, heatmap, classificationDistribution };
     });
 
     res.json(data);

@@ -116,6 +116,7 @@ export interface DashboardSummary {
 export interface CategoryHeatmapEntry {
   category: Category;
   averageScore: number | null;
+  weeklyChangePct: number | null;
 }
 
 export interface CategoryWeekPoint {
@@ -133,6 +134,7 @@ export interface CategoryTrendsResponse {
   weeks: string[];
   categories: CategoryTrendSeries[];
   heatmap: CategoryHeatmapEntry[];
+  classificationDistribution: Record<ScoreClass, number>;
 }
 
 /** Espelha ScraperStatusMessage (packages/queue/src/statusPublisher.ts) — payload recebido via SSE. */
