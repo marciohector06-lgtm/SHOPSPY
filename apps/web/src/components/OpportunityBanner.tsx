@@ -38,7 +38,7 @@ export function OpportunityBanner({ product }: { product: ProductDetail }) {
 
       <Link
         href={`/produto/${product.id}`}
-        className="shrink-0 self-start rounded-md bg-spy-indigo px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-spy-indigo-light sm:self-center"
+        className="flex h-11 shrink-0 items-center self-start rounded-md bg-spy-indigo px-4 text-sm font-medium text-white transition-colors hover:bg-spy-indigo-light sm:self-center"
       >
         Ver detalhes →
       </Link>

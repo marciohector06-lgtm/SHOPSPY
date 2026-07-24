@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { WarningIcon } from "../icons";
 
 const INPUT_CLASS =
-  "rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-ink-primary outline-none transition-colors focus:border-brand-primary/60";
+  "h-11 rounded-lg border border-brand-border bg-brand-surface px-3 text-sm text-ink-primary outline-none transition-colors focus:border-brand-primary/60";
 
 export function RegisterForm() {
   const router = useRouter();
@@ -122,7 +122,7 @@ export function RegisterForm() {
       <button
         type="submit"
         disabled={loading}
-        className="mt-1 rounded-lg bg-brand-primary px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-brand-glow disabled:opacity-60"
+        className="mt-1 h-11 rounded-lg bg-brand-primary px-4 text-sm font-medium text-white transition-colors hover:bg-brand-glow disabled:opacity-60"
       >
         {loading ? "Criando conta…" : "Criar conta"}
       </button>

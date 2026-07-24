@@ -29,7 +29,7 @@ export default function CriadoresPage() {
 
       <Link
         href="/oportunidades"
-        className="rounded-md bg-spy-indigo px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-spy-indigo-light"
+        className="flex h-11 items-center rounded-md bg-spy-indigo px-4 text-sm font-medium text-white transition-colors hover:bg-spy-indigo-light"
       >
         Ver oportunidades disponíveis
       </Link>

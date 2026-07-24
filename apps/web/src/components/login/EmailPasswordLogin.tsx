@@ -5,7 +5,7 @@ import { useRouter } from "next/navigation";
 import { WarningIcon } from "../icons";
 
 const INPUT_CLASS =
-  "rounded-lg border border-brand-border bg-brand-surface px-3 py-2 text-sm text-ink-primary outline-none transition-colors focus:border-brand-primary/60";
+  "h-11 rounded-lg border border-brand-border bg-brand-surface px-3 text-sm text-ink-primary outline-none transition-colors focus:border-brand-primary/60";
 
 export function EmailPasswordLogin() {
   const router = useRouter();
@@ -20,7 +20,7 @@ export function EmailPasswordLogin() {
       <button
         type="button"
         onClick={() => setExpanded(true)}
-        className="mt-3 block w-full text-center text-xs text-ink-muted transition-colors hover:text-ink-secondary"
+        className="mt-3 flex min-h-11 w-full items-center justify-center text-center text-xs text-ink-muted transition-colors hover:text-ink-secondary"
       >
         Entrar com email →
       </button>
@@ -96,7 +96,7 @@ export function EmailPasswordLogin() {
       <button
         type="submit"
         disabled={loading}
-        className="rounded-lg bg-brand-primary px-4 py-2 text-sm font-medium text-white transition-colors hover:bg-brand-glow disabled:opacity-60"
+        className="h-11 rounded-lg bg-brand-primary px-4 text-sm font-medium text-white transition-colors hover:bg-brand-glow disabled:opacity-60"
       >
         {loading ? "Entrando…" : "Entrar"}
       </button>

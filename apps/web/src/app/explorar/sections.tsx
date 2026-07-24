@@ -67,7 +67,10 @@ export async function TopProductsSection({
           ))}
         </div>
         {data.items.length > TOP_PRODUCTS_PREVIEW && (
-          <Link href="/produtos" className="self-end text-xs font-medium text-spy-indigo-light hover:underline">
+          <Link
+            href="/produtos"
+            className="flex min-h-11 items-center self-end text-xs font-medium text-spy-indigo-light hover:underline"
+          >
             Ver todos os {data.items.length} produtos →
           </Link>
         )}

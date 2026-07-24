@@ -52,14 +52,14 @@ export function OpportunityCard({ product, onOpenScript }: { product: ProductDet
         </div>
         <Link
           href={`/produto/${product.id}`}
-          className="w-full rounded-md bg-spy-indigo px-3 py-1.5 text-center text-xs font-medium text-white transition-colors hover:bg-spy-indigo-light sm:w-auto"
+          className="flex h-11 w-full items-center justify-center rounded-md bg-spy-indigo px-3 text-center text-xs font-medium text-white transition-colors hover:bg-spy-indigo-light sm:w-auto"
         >
           Ver produto
         </Link>
         <button
           type="button"
           onClick={onOpenScript}
-          className="inline-flex w-full items-center justify-center gap-1 rounded-md border border-spy-border px-3 py-1.5 text-xs font-medium text-spy-text transition-colors hover:border-spy-indigo/40 hover:text-spy-indigo-light sm:w-auto"
+          className="inline-flex h-11 w-full items-center justify-center gap-1 rounded-md border border-spy-border px-3 text-xs font-medium text-spy-text transition-colors hover:border-spy-indigo/40 hover:text-spy-indigo-light sm:w-auto"
         >
           <BoltIcon className="h-3.5 w-3.5" />
           Roteiro UGC

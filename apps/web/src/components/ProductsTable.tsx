@@ -129,7 +129,7 @@ export function ProductsTable({ initialItems, initialCursor }: ProductsTableProp
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as Category | "")}
-          className="rounded-md border border-spy-border bg-spy-surface px-2.5 py-1.5 text-xs text-spy-text"
+          className="h-11 rounded-md border border-spy-border bg-spy-surface px-2.5 text-xs text-spy-text"
         >
           <option value="">Categoria: todas</option>
           {CATEGORIES.map((c) => (
@@ -142,7 +142,7 @@ export function ProductsTable({ initialItems, initialCursor }: ProductsTableProp
         <select
           value={classification}
           onChange={(e) => setClassification(e.target.value as ScoreClass | "")}
-          className="rounded-md border border-spy-border bg-spy-surface px-2.5 py-1.5 text-xs text-spy-text"
+          className="h-11 rounded-md border border-spy-border bg-spy-surface px-2.5 text-xs text-spy-text"
         >
           <option value="">Classificação: todas</option>
           {SCORE_CLASSES.map((c) => (
@@ -155,7 +155,7 @@ export function ProductsTable({ initialItems, initialCursor }: ProductsTableProp
         <select
           value={scoreMin}
           onChange={(e) => setScoreMin(Number(e.target.value))}
-          className="rounded-md border border-spy-border bg-spy-surface px-2.5 py-1.5 text-xs text-spy-text"
+          className="h-11 rounded-md border border-spy-border bg-spy-surface px-2.5 text-xs text-spy-text"
         >
           {SCORE_MIN_OPTIONS.map((min) => (
             <option key={min} value={min}>
@@ -169,7 +169,7 @@ export function ProductsTable({ initialItems, initialCursor }: ProductsTableProp
           value={search}
           onChange={(e) => setSearch(e.target.value)}
           placeholder="Buscar produto..."
-          className="min-w-[180px] flex-1 rounded-md border border-spy-border bg-spy-surface px-2.5 py-1.5 text-xs text-spy-text placeholder:text-spy-faint"
+          className="h-11 min-w-[180px] flex-1 rounded-md border border-spy-border bg-spy-surface px-2.5 text-xs text-spy-text placeholder:text-spy-faint"
         />
       </div>
 
@@ -258,7 +258,7 @@ export function ProductsTable({ initialItems, initialCursor }: ProductsTableProp
           type="button"
           onClick={loadMore}
           disabled={loadingMore}
-          className="self-center rounded-md border border-spy-border px-4 py-2 text-sm font-medium text-spy-text transition-colors hover:border-spy-indigo/40 hover:text-spy-indigo-light disabled:opacity-50"
+          className="inline-flex h-11 items-center self-center rounded-md border border-spy-border px-4 text-sm font-medium text-spy-text transition-colors hover:border-spy-indigo/40 hover:text-spy-indigo-light disabled:opacity-50"
         >
           {loadingMore ? "Carregando…" : "Carregar mais 50"}
         </button>

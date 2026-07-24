@@ -36,7 +36,7 @@ export function ProductRow({ product, rank }: { product: ProductDetail; rank: nu
       </div>
       <Link
         href={`/produto/${product.id}`}
-        className="shrink-0 rounded-md border border-spy-border px-3 py-1.5 text-xs font-medium text-spy-text transition-colors hover:border-spy-indigo/40 hover:text-spy-indigo-light"
+        className="inline-flex h-11 min-w-11 shrink-0 items-center justify-center rounded-md border border-spy-border px-3 text-xs font-medium text-spy-text transition-colors hover:border-spy-indigo/40 hover:text-spy-indigo-light"
       >
         Ver
       </Link>

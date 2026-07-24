@@ -9,7 +9,7 @@ export function UpgradeState({ message, upgradeUrl }: { message: string; upgrade
       </p>
       <a
         href={upgradeUrl}
-        className="rounded-md bg-spy-indigo px-4 py-1.5 text-sm font-medium text-white transition-colors hover:bg-spy-indigo-light"
+        className="flex h-11 items-center rounded-md bg-spy-indigo px-4 text-sm font-medium text-white transition-colors hover:bg-spy-indigo-light"
       >
         Assinar PRO
       </a>

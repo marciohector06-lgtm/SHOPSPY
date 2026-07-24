@@ -37,7 +37,7 @@ export function ProductActionCard({ product, score }: { product: ProductDetail; 
       <button
         type="button"
         onClick={() => setScriptOpen(true)}
-        className="inline-flex items-center justify-center gap-1.5 rounded-md bg-spy-indigo px-4 py-2.5 text-sm font-medium text-white transition-colors hover:bg-spy-indigo-light"
+        className="inline-flex h-11 items-center justify-center gap-1.5 rounded-md bg-spy-indigo px-4 text-sm font-medium text-white transition-colors hover:bg-spy-indigo-light"
       >
         <BoltIcon className="h-4 w-4" />
         Gerar Roteiro UGC

@@ -23,7 +23,7 @@ export function CheckoutButton() {
       <button
         type="button"
         onClick={handleClick}
-        className="w-full rounded-md bg-indigo-500 px-4 py-2.5 text-sm font-semibold text-white transition-colors hover:bg-indigo-400"
+        className="h-11 w-full rounded-md bg-indigo-500 px-4 text-sm font-semibold text-white transition-colors hover:bg-indigo-400"
       >
         Assinar PRO
       </button>

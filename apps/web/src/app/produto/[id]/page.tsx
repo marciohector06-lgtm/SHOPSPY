@@ -48,7 +48,10 @@ export default async function ProdutoDetailPage({ params }: { params: { id: stri
 
   return (
     <div className="flex flex-col gap-6">
-      <Link href="/produtos" className="self-start text-xs font-medium text-spy-indigo-light hover:underline">
+      <Link
+        href="/produtos"
+        className="flex min-h-11 items-center self-start text-xs font-medium text-spy-indigo-light hover:underline"
+      >
         ← Voltar pra produtos
       </Link>
 

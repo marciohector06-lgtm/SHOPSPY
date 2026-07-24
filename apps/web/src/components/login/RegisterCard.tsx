@@ -20,7 +20,7 @@ export function RegisterCard() {
 
       <p className="mt-6 text-center text-xs text-ink-muted">
         Já tenho conta?{" "}
-        <a href="/login" className="font-medium text-brand-glow hover:text-brand-primary">
+        <a href="/login" className="inline-block min-h-11 py-3 font-medium text-brand-glow hover:text-brand-primary">
           Entrar →
         </a>
       </p>

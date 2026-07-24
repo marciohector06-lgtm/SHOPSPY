@@ -45,7 +45,7 @@ export function ProductCard({ product }: { product: ProductDetail }) {
         <span className="text-xs text-spy-muted">Comissão {formatBRL(product.commissionValueBR)}</span>
         <Link
           href={`/produto/${product.id}`}
-          className="rounded-md border border-spy-border px-3 py-1.5 text-xs font-medium text-spy-text transition-colors hover:border-spy-indigo/40 hover:text-spy-indigo-light"
+          className="inline-flex h-11 items-center rounded-md border border-spy-border px-3 text-xs font-medium text-spy-text transition-colors hover:border-spy-indigo/40 hover:text-spy-indigo-light"
         >
           Ver produto →
         </Link>

@@ -32,7 +32,7 @@ function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigat
             key={item.href}
             href={item.href}
             onClick={onNavigate}
-            className={`relative flex items-center gap-1.5 px-3 py-2 text-sm transition-colors duration-150 ${
+            className={`relative flex min-h-11 items-center gap-1.5 px-3 py-3 text-sm transition-colors duration-150 ${
               active ? "text-spy-indigo-light" : "text-spy-muted hover:text-spy-indigo-light"
             }`}
           >
@@ -59,14 +59,14 @@ export function Topbar({ user }: { user: AccessTokenPayload }) {
             type="button"
             onClick={() => setDrawerOpen(true)}
             aria-label="Abrir menu"
-            className="flex h-8 w-8 items-center justify-center rounded-md text-spy-muted hover:bg-spy-hover hover:text-spy-text lg:hidden"
+            className="flex h-11 w-11 items-center justify-center rounded-md text-spy-muted hover:bg-spy-hover hover:text-spy-text lg:hidden"
           >
             <svg viewBox="0 0 24 24" fill="none" className="h-5 w-5" aria-hidden>
               <path d="M4 6h16M4 12h16M4 18h16" stroke="currentColor" strokeWidth="1.75" strokeLinecap="round" />
             </svg>
           </button>
 
-          <Link href="/explorar" className="flex items-center gap-2">
+          <Link href="/explorar" className="flex min-h-11 items-center gap-2 py-3">
             <LogoMark className="h-5 w-5 text-spy-indigo" />
             <span className="font-display text-sm font-bold text-spy-text">ShopSpy</span>
           </Link>

@@ -35,7 +35,10 @@ export function AuthHeroLayout({ rightCard }: { rightCard: ReactNode }) {
           <LogoMark className="h-5 w-5 text-brand-primary" />
           <span className="font-display text-base font-bold text-ink-primary">ShopSpy</span>
         </div>
-        <a href="#saiba-mais" className="text-sm text-ink-secondary transition-colors hover:text-ink-primary">
+        <a
+          href="#saiba-mais"
+          className="flex min-h-11 items-center text-sm text-ink-secondary transition-colors hover:text-ink-primary"
+        >
           Saiba mais ↓
         </a>
       </nav>
@@ -105,8 +108,8 @@ export function AuthHeroLayout({ rightCard }: { rightCard: ReactNode }) {
         </div>
       </section>
 
-      <footer className="relative z-10 px-6 pb-10 text-center text-xs text-ink-muted sm:px-10">
-        <a href="/privacy" className="hover:text-ink-secondary">
+      <footer className="relative z-10 flex justify-center px-6 pb-10 text-xs text-ink-muted sm:px-10">
+        <a href="/privacy" className="flex min-h-11 items-center hover:text-ink-secondary">
           Política de privacidade
         </a>
       </footer>

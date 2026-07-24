@@ -134,7 +134,7 @@ export function OpportunitiesView({ items, isFree }: OpportunitiesViewProps) {
         <button
           type="button"
           onClick={() => setClassification("")}
-          className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset transition-colors ${
+          className={`inline-flex min-h-11 items-center rounded-full px-3 text-xs font-medium ring-1 ring-inset transition-colors ${
             classification === "" ? "bg-spy-indigo-dim text-spy-indigo-light ring-spy-indigo/40" : "text-spy-muted ring-spy-border hover:text-spy-text"
           }`}
         >
@@ -145,7 +145,7 @@ export function OpportunitiesView({ items, isFree }: OpportunitiesViewProps) {
             key={c}
             type="button"
             onClick={() => setClassification(c)}
-            className={`rounded-full px-3 py-1 text-xs font-medium ring-1 ring-inset transition-colors ${
+            className={`inline-flex min-h-11 items-center rounded-full px-3 text-xs font-medium ring-1 ring-inset transition-colors ${
               classification === c ? CLASSIFICATION_COLORS[c] : "text-spy-muted ring-spy-border hover:text-spy-text"
             }`}
           >
@@ -156,7 +156,7 @@ export function OpportunitiesView({ items, isFree }: OpportunitiesViewProps) {
         <select
           value={category}
           onChange={(e) => setCategory(e.target.value as Category | "")}
-          className="rounded-md border border-spy-border bg-spy-surface px-2.5 py-1.5 text-xs text-spy-text"
+          className="h-11 rounded-md border border-spy-border bg-spy-surface px-2.5 text-xs text-spy-text"
         >
           <option value="">Categoria: todas</option>
           {categories.map((c) => (
@@ -169,7 +169,7 @@ export function OpportunitiesView({ items, isFree }: OpportunitiesViewProps) {
         <select
           value={windowLabel}
           onChange={(e) => setWindowLabel(e.target.value)}
-          className="rounded-md border border-spy-border bg-spy-surface px-2.5 py-1.5 text-xs text-spy-text"
+          className="h-11 rounded-md border border-spy-border bg-spy-surface px-2.5 text-xs text-spy-text"
         >
           <option value="">Janela: todas</option>
           {windowLabels.map((w) => (
@@ -182,7 +182,7 @@ export function OpportunitiesView({ items, isFree }: OpportunitiesViewProps) {
         <select
           value={sort}
           onChange={(e) => setSort(e.target.value as SortMode)}
-          className="ml-auto rounded-md border border-spy-border bg-spy-surface px-2.5 py-1.5 text-xs text-spy-text"
+          className="ml-auto h-11 rounded-md border border-spy-border bg-spy-surface px-2.5 text-xs text-spy-text"
         >
           {Object.entries(SORT_LABELS).map(([value, label]) => (
             <option key={value} value={value}>

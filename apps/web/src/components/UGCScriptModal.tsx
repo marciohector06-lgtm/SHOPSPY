@@ -111,7 +111,7 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
             type="button"
             onClick={onClose}
             aria-label="Fechar"
-            className="rounded-md p-1 text-spy-muted hover:bg-spy-hover hover:text-spy-text"
+            className="flex h-11 w-11 items-center justify-center rounded-md text-spy-muted hover:bg-spy-hover hover:text-spy-text"
           >
             ✕
           </button>
@@ -136,7 +136,7 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
                   <button
                     type="button"
                     onClick={() => setOpenSections((prev) => ({ ...prev, [marker]: !prev[marker] }))}
-                    className="flex w-full items-center justify-between px-3 py-2 text-left text-sm font-medium text-spy-text"
+                    className="flex min-h-11 w-full items-center justify-between px-3 py-2 text-left text-sm font-medium text-spy-text"
                   >
                     {SECTION_LABELS[marker]}
                     <span className="text-spy-muted">{openSections[marker] ? "▾" : "▸"}</span>
@@ -166,7 +166,7 @@ export function UGCScriptModal({ productId, productName, isOpen, onClose }: UGCS
                       <button
                         type="button"
                         onClick={() => copyPrompt(prompt, index)}
-                        className="shrink-0 rounded-md bg-spy-indigo-dim px-2 py-0.5 text-[11px] font-medium text-spy-indigo-light hover:bg-spy-indigo/30"
+                        className="inline-flex h-11 shrink-0 items-center rounded-md bg-spy-indigo-dim px-3 text-[11px] font-medium text-spy-indigo-light hover:bg-spy-indigo/30"
                       >
                         {copiedIndex === index ? "copiado!" : "copiar"}
                       </button>

@@ -68,7 +68,7 @@ export function LoginCard() {
 
       <p className="mt-6 text-center text-xs text-ink-muted">
         Não tem conta?{" "}
-        <a href="/register" className="font-medium text-brand-glow hover:text-brand-primary">
+        <a href="/register" className="inline-block min-h-11 py-3 font-medium text-brand-glow hover:text-brand-primary">
           Criar conta →
         </a>
       </p>
