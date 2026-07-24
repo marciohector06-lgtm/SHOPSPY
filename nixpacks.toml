@@ -1,2 +1,11 @@
 [phases.setup]
-nixPkgs = ["chromium", "nss", "nspr", "atk", "cups", "dbus", "libdrm", "gtk3", "pango", "cairo", "xorg.libX11", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "libxcb", "mesa", "expat", "xorg.libxkbfile"]
+nixPkgs = ["nodejs_20", "chromium", "nss", "nspr", "atk", "cups", "dbus", "libdrm", "gtk3", "pango", "cairo", "xorg.libX11", "xorg.libXcomposite", "xorg.libXdamage", "xorg.libXext", "xorg.libXfixes", "xorg.libXrandr", "libxcb", "mesa", "expat", "xorg.libxkbfile"]
+
+[phases.install]
+cmds = ["npm install -g npm@latest", "npm ci"]
+
+[phases.build]
+cmds = ["npx prisma generate --schema=packages/database/prisma/schema.prisma", "turbo run build --filter=apps/api"]
+
+[start]
+cmd = "npm run start --workspace=apps/api"
