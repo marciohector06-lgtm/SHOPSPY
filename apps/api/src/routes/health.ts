@@ -52,23 +52,32 @@ async function scraperStatuses() {
     (SCRAPER_SOURCES as readonly string[]).includes(entry.source)
   );
 
-  return Promise.all(
-    scraperEntries.map(async (entry) => {
-      const lastLog = await prisma.scraperLog.findFirst({
-        where: { source: entry.source as ScraperSource },
-        orderBy: { createdAt: "desc" },
-      });
+  try {
+    return await Promise.all(
+      scraperEntries.map(async (entry) => {
+        const lastLog = await prisma.scraperLog.findFirst({
+          where: { source: entry.source as ScraperSource },
+          orderBy: { createdAt: "desc" },
+        });
 
-      return {
-        source: entry.source,
-        label: labelFor(entry.source),
-        lastRun: lastLog
-          ? { at: lastLog.createdAt.toISOString(), status: lastLog.status, itemsFound: lastLog.itemsFound }
-          : null,
-        nextRun: nextRunFor(entry.cron),
-      };
-    })
-  );
+        return {
+          source: entry.source,
+          label: labelFor(entry.source),
+          lastRun: lastLog
+            ? { at: lastLog.createdAt.toISOString(), status: lastLog.status, itemsFound: lastLog.itemsFound }
+            : null,
+          nextRun: nextRunFor(entry.cron),
+        };
+      })
+    );
+  } catch {
+    return scraperEntries.map((entry) => ({
+      source: entry.source,
+      label: labelFor(entry.source),
+      lastRun: null,
+      nextRun: nextRunFor(entry.cron),
+    }));
+  }
 }
 
 /**
@@ -78,44 +87,53 @@ async function scraperStatuses() {
  * última vez, então entra como uma entrada extra no mesmo array.
  */
 async function scoreCalculatorStatus() {
-  const lastLog = await prisma.scraperLog.findFirst({
-    where: { source: "SCORE_CALCULATOR" },
-    orderBy: { createdAt: "desc" },
-  });
+  try {
+    const lastLog = await prisma.scraperLog.findFirst({
+      where: { source: "SCORE_CALCULATOR" },
+      orderBy: { createdAt: "desc" },
+    });
 
-  return {
-    source: "SCORE_CALCULATOR",
-    label: "Score Calculator",
-    lastRun: lastLog
-      ? { at: lastLog.createdAt.toISOString(), status: lastLog.status, itemsFound: lastLog.itemsFound }
-      : null,
-    nextRun: null, // cron "triggered" — libera quando a barreira do ciclo termina, não em horário fixo
-  };
+    return {
+      source: "SCORE_CALCULATOR",
+      label: "Score Calculator",
+      lastRun: lastLog
+        ? { at: lastLog.createdAt.toISOString(), status: lastLog.status, itemsFound: lastLog.itemsFound }
+        : null,
+      nextRun: null, // cron "triggered" — libera quando a barreira do ciclo termina, não em horário fixo
+    };
+  } catch {
+    return { source: "SCORE_CALCULATOR", label: "Score Calculator", lastRun: null, nextRun: null };
+  }
 }
 
 async function lastCycleStatus() {
   const cycleId = new Date().toISOString().slice(0, 10);
-  const logs = await prisma.scraperLog.findMany({
-    where: {
-      source: { in: CYCLE_SCRAPER_SOURCES as ScraperSource[] },
-      createdAt: { gte: new Date(`${cycleId}T00:00:00.000Z`) },
-    },
-  });
-
-  const doneSources = new Set(logs.map((log) => log.source));
   const totalSources = CYCLE_SCRAPER_SOURCES.length;
-  const hasErrors = logs.some((log) => log.status === "error");
 
-  const status =
-    doneSources.size === 0
-      ? "pending"
-      : doneSources.size < totalSources
-        ? "in_progress"
-        : hasErrors
-          ? "degraded"
-          : "completed";
+  try {
+    const logs = await prisma.scraperLog.findMany({
+      where: {
+        source: { in: CYCLE_SCRAPER_SOURCES as ScraperSource[] },
+        createdAt: { gte: new Date(`${cycleId}T00:00:00.000Z`) },
+      },
+    });
 
-  return { cycleId, status, completedSources: doneSources.size, totalSources };
+    const doneSources = new Set(logs.map((log) => log.source));
+    const hasErrors = logs.some((log) => log.status === "error");
+
+    const status =
+      doneSources.size === 0
+        ? "pending"
+        : doneSources.size < totalSources
+          ? "in_progress"
+          : hasErrors
+            ? "degraded"
+            : "completed";
+
+    return { cycleId, status, completedSources: doneSources.size, totalSources };
+  } catch {
+    return { cycleId, status: "unknown", completedSources: 0, totalSources };
+  }
 }
 
 /**

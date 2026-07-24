@@ -31,15 +31,16 @@ COPY packages/scrapers/package*.json ./packages/scrapers/
 COPY apps/api/package*.json ./apps/api/
 COPY turbo.json ./
 
-# Instala dependências
-RUN npm ci
+# Instala dependências (inclui devDependencies mesmo com NODE_ENV=production,
+# necessárias para compilar: tsc, tsx, turbo)
+RUN npm install --include=dev
 
 # Copia resto do código
 COPY . .
 
 # Gera Prisma e builda
 RUN npx prisma generate --schema=packages/database/prisma/schema.prisma
-RUN npx turbo run build --filter=apps/api
+RUN npx turbo run build --filter=@shopspy/api
 
 EXPOSE 4000
 
