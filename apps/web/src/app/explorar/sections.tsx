@@ -8,10 +8,12 @@ import { ProductCard } from "../../components/ProductCard";
 import { VideoCard } from "../../components/VideoCard";
 import { CategoryChip } from "../../components/CategoryChip";
 import { ScraperStatusDot } from "../../components/ScraperStatusDot";
+import { RegionFlags } from "../../components/RegionFlags";
+import { BRAvailabilityBadge } from "../../components/BRAvailabilityBadge";
 import { EmptyState } from "../../components/ui/EmptyState";
 import { ErrorState } from "../../components/ui/ErrorState";
 import { UpgradeState } from "../../components/ui/UpgradeState";
-import { ClockIcon, PlayIcon, UsersIcon } from "../../components/icons";
+import { ClockIcon, PlayIcon, UsersIcon, MapPinIcon } from "../../components/icons";
 
 export function SectionCard({ title, children }: { title: string; children: ReactNode }) {
   return (
@@ -101,6 +103,53 @@ export async function New48hSection({
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {data.items.map((product) => (
           <ProductCard key={product.id} product={product} />
+        ))}
+      </div>
+    );
+  } catch (error) {
+    return sectionErrorFallback(error);
+  }
+}
+
+/**
+ * Produtos altos no LATAM (México/Colômbia/Argentina/Chile) mas ainda baixos
+ * no Brasil — filter=latam-opportunity em /opportunities/top (ver
+ * apps/api/src/routes/opportunities.ts). Mesmo padrão de New48hSection: grid
+ * de ProductCard, badges de região via RegionFlags.
+ */
+export async function LatamOpportunitySection({
+  dataPromise,
+}: {
+  dataPromise: Promise<OpportunitiesTopResponse>;
+}): Promise<JSX.Element> {
+  try {
+    const data = await dataPromise;
+    if (data.items.length === 0) {
+      return (
+        <EmptyState
+          icon={<MapPinIcon className="h-8 w-8" />}
+          title="Nenhuma oportunidade LATAM no momento"
+          message="Aparece aqui quando um produto ficar alto no México/Colômbia/Argentina/Chile e ainda baixo no Brasil."
+        />
+      );
+    }
+    return (
+      <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+        {data.items.map((product) => (
+          <ProductCard
+            key={product.id}
+            product={product}
+            badges={
+              <>
+                <BRAvailabilityBadge priceBR={product.priceBR} commissionValueBR={product.commissionValueBR} />
+                <RegionFlags
+                  latamScore={product.latamScore}
+                  asiaScore={product.asiaScore}
+                  europeScore={product.europeScore}
+                />
+              </>
+            }
+          />
         ))}
       </div>
     );

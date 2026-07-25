@@ -57,6 +57,9 @@ function fakeProduct(overrides: Partial<ProductDetail> = {}): ProductDetail {
     amazonRankUK: null,
     tiktokImpressions: null,
     tiktokCTR: null,
+    latamScore: null,
+    asiaScore: null,
+    europeScore: null,
     createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(), // 30 dias atrás, não é NOVO
     updatedAt: new Date().toISOString(),
     scores: [fakeScore()],

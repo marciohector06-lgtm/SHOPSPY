@@ -19,7 +19,10 @@
     "typecheck": "turbo run typecheck",
     "db:generate": "npm run generate --workspace=@shopspy/database",
     "db:migrate": "npm run migrate:dev --workspace=@shopspy/database",
-    "db:studio": "npm run studio --workspace=@shopspy/database"
+    "db:studio": "npm run studio --workspace=@shopspy/database",
+    "collect:br": "bash scripts/collect-br.sh",
+    "collect:global": "bash scripts/collect-global.sh",
+    "collect:all": "bash scripts/collect-all.sh"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",

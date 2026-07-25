@@ -29,10 +29,16 @@ export const productsListQuerySchema = z.object({
 export type ProductsListQuery = z.infer<typeof productsListQuerySchema>;
 
 export const opportunitiesTopQuerySchema = z.object({
-  filter: z.enum(["new48h"]).optional(),
+  filter: z.enum(["new48h", "latam-opportunity"]).optional(),
 });
 
 export type OpportunitiesTopQuery = z.infer<typeof opportunitiesTopQuerySchema>;
+
+export const regionalHeatmapQuerySchema = z.object({
+  region: z.enum(["LATAM", "ASIA", "EUROPE", "GLOBAL"]),
+});
+
+export type RegionalHeatmapQuery = z.infer<typeof regionalHeatmapQuerySchema>;
 
 export const createAlertSchema = z.object({
   productId: z.string().regex(ID_PATTERN, "productId inválido"),

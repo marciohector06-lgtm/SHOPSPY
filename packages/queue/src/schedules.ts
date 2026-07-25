@@ -1,4 +1,4 @@
-export type CyclePhase = "global" | "brazil" | "processing" | "maintenance";
+export type CyclePhase = "global" | "brazil" | "processing" | "maintenance" | "international";
 
 export interface ScheduleEntry {
   source: string;
@@ -32,10 +32,34 @@ export const SCHEDULES: ScheduleEntry[] = [
   { source: "SCORE_CALCULATOR", cron: "triggered", phase: "processing" }, // liberado pela barreira, não por cron
   { source: "VIDEO_COLLECTOR", cron: "0 9 * * *", phase: "processing" },
   { source: "OPPORTUNITY_AI", cron: "0 10 * * *", phase: "processing" },
+  { source: "BR_MATCHER", cron: "30 10 * * *", phase: "processing" },
   { source: "ALERT_CHECKER", cron: "triggered", phase: "processing" }, // liberado quando SCORE_CALCULATOR termina (Fase 10)
 
   // ─── Manutenção ──────────────────────────────────────────────────────────
   { source: "CLEANUP", cron: "0 2 * * 0", phase: "maintenance" },
+
+  // ─── Internacional (TikTok Creative Center — LATAM/Ásia/Europa) ───────────
+  // Fase própria (não "global"/"brazil") de propósito: não entram na barreira
+  // do ciclo diário (CYCLE_SCRAPER_SOURCES) — alimentam latamScore/asiaScore/
+  // europeScore como dado suplementar, sem atrasar o SCORE_CALCULATOR do dia.
+  { source: "TIKTOK_CREATIVE_MX", cron: "0 3 * * *", phase: "international" },
+  { source: "TIKTOK_CREATIVE_CO", cron: "5 3 * * *", phase: "international" },
+  { source: "TIKTOK_CREATIVE_AR", cron: "10 3 * * *", phase: "international" },
+  { source: "TIKTOK_CREATIVE_CL", cron: "15 3 * * *", phase: "international" },
+  { source: "TIKTOK_CREATIVE_TH", cron: "0 8 * * *", phase: "international" },
+  { source: "TIKTOK_CREATIVE_ID", cron: "10 8 * * *", phase: "international" },
+  { source: "TIKTOK_CREATIVE_VN", cron: "20 8 * * *", phase: "international" },
+  { source: "TIKTOK_CREATIVE_JP", cron: "30 8 * * *", phase: "international" },
+  { source: "TIKTOK_CREATIVE_FR", cron: "0 14 * * *", phase: "international" },
+  { source: "TIKTOK_CREATIVE_DE", cron: "10 14 * * *", phase: "international" },
+  { source: "TIKTOK_CREATIVE_IT", cron: "20 14 * * *", phase: "international" },
+  // Chamada de API leve (sem Puppeteer) — cobre as 11 regiões em uma execução,
+  // mesmo padrão do GOOGLE_TRENDS_US (que já cobre US/UK/AU/CA numa só fonte).
+  { source: "GOOGLE_TRENDS_INTERNATIONAL", cron: "0 15 * * *", phase: "international" },
+  // A cada 2h — cron de passo (*/2), por isso fica fora da fase "processing"
+  // (earliestHourInPhase/latestHourInPhase só extraem hora fixa, não suportam
+  // step syntax; "international" não é comparado por elas hoje).
+  { source: "EXPLOSIVE_DETECTOR", cron: "0 */2 * * *", phase: "international" },
 ];
 
 export const TIMEZONE = "America/Sao_Paulo";

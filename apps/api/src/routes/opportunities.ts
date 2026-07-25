@@ -10,6 +10,9 @@ const FREE_DELAY_MS = 48 * 60 * 60 * 1000;
 const FREE_LIMIT = 3;
 const PRO_LIMIT = 100;
 const NEW_48H_LIMIT = 6;
+const LATAM_MIN_SCORE = 60;
+const BR_MAX_SCORE = 30;
+const LATAM_GAP_MIN = 30;
 
 /**
  * Produtos com Product.createdAt dentro das últimas 48h, ordenados pelo
@@ -36,6 +39,30 @@ async function findNew48hOpportunities() {
 }
 
 /**
+ * Produtos "chegando pelo LATAM": alto no México/Colômbia/Argentina/Chile
+ * (Product.latamScore, populado pelo SCORE_CALCULATOR a partir do
+ * RegionalScore — ver packages/queue/src/scoreCalculator.ts) mas ainda
+ * baixo no Brasil (TrendScore.trendsBR mais recente) — sinal de que a
+ * tendência ainda não chegou aqui.
+ */
+async function findLatamOpportunities() {
+  const rows = await prisma.product.findMany({
+    where: { latamScore: { gt: LATAM_MIN_SCORE } },
+    include: scoresVideosInclude(4, 2),
+  });
+
+  const withGap = rows.map(reverseScores).map((row) => {
+    const brScore = row.scores[row.scores.length - 1]?.trendsBR ?? 0;
+    return { row, brScore, gap: (row.latamScore ?? 0) - brScore };
+  });
+
+  return withGap
+    .filter(({ brScore, gap }) => brScore < BR_MAX_SCORE && gap > LATAM_GAP_MIN)
+    .sort((a, b) => b.gap - a.gap)
+    .map(({ row }) => row);
+}
+
+/**
  * FREE vê só o top 3, com 48h de atraso (a semana ISO calculada a partir de
  * "agora - 48h", não da semana atual) — PRO vê tudo, em tempo real. Os
  * outros endpoints de oportunidade (/products) exigem PRO; este é o único
@@ -49,6 +76,12 @@ export function createOpportunitiesRouter(): Router {
 
     if (filter === "new48h") {
       const items = await findNew48hOpportunities();
+      res.json({ items, delayedAt: null });
+      return;
+    }
+
+    if (filter === "latam-opportunity") {
+      const items = await findLatamOpportunities();
       res.json({ items, delayedAt: null });
       return;
     }

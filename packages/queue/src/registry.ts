@@ -9,10 +9,24 @@ import {
   runAmazonUKScraper,
   runAliExpressGlobalScraper,
   runGoogleTrendsGlobalScraper,
+  runTikTokCreativeMXScraper,
+  runTikTokCreativeCOScraper,
+  runTikTokCreativeARScraper,
+  runTikTokCreativeCLScraper,
+  runTikTokCreativeTHScraper,
+  runTikTokCreativeIDScraper,
+  runTikTokCreativeVNScraper,
+  runTikTokCreativeJPScraper,
+  runTikTokCreativeFRScraper,
+  runTikTokCreativeDEScraper,
+  runTikTokCreativeITScraper,
+  runGoogleTrendsInternationalScraper,
+  matchProductsWithBR,
   type ScraperRunResult,
 } from "@shopspy/scrapers";
 import { runAlertChecker } from "./alertChecker";
 import { runScoreCalculator } from "./scoreCalculator";
+import { runExplosiveAlertChecker } from "./explosiveAlertChecker";
 
 export type ScraperRunner = () => Promise<ScraperRunResult>;
 
@@ -43,6 +57,21 @@ export const SCRAPER_RUNNERS: Record<string, ScraperRunner> = {
   VIDEOS_BR: NOT_IMPLEMENTED("VIDEOS_BR"),
   ALERT_CHECKER: runAlertChecker,
   SCORE_CALCULATOR: runScoreCalculator,
+  // TikTok Creative Center internacional (packages/scrapers/src/global/tiktok-creative-international.ts).
+  TIKTOK_CREATIVE_MX: runTikTokCreativeMXScraper,
+  TIKTOK_CREATIVE_CO: runTikTokCreativeCOScraper,
+  TIKTOK_CREATIVE_AR: runTikTokCreativeARScraper,
+  TIKTOK_CREATIVE_CL: runTikTokCreativeCLScraper,
+  TIKTOK_CREATIVE_TH: runTikTokCreativeTHScraper,
+  TIKTOK_CREATIVE_ID: runTikTokCreativeIDScraper,
+  TIKTOK_CREATIVE_VN: runTikTokCreativeVNScraper,
+  TIKTOK_CREATIVE_JP: runTikTokCreativeJPScraper,
+  TIKTOK_CREATIVE_FR: runTikTokCreativeFRScraper,
+  TIKTOK_CREATIVE_DE: runTikTokCreativeDEScraper,
+  TIKTOK_CREATIVE_IT: runTikTokCreativeITScraper,
+  GOOGLE_TRENDS_INTERNATIONAL: runGoogleTrendsInternationalScraper,
+  EXPLOSIVE_DETECTOR: runExplosiveAlertChecker,
+  BR_MATCHER: matchProductsWithBR,
 };
 
 export function isKnownSource(source: string): boolean {

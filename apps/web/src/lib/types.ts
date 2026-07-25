@@ -27,6 +27,10 @@ export interface Product {
   tiktokImpressions: number | null;
   tiktokCTR: number | null;
 
+  latamScore: number | null;
+  asiaScore: number | null;
+  europeScore: number | null;
+
   createdAt: string;
   updatedAt: string;
 }

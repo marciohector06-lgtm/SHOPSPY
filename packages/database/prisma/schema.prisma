@@ -42,11 +42,17 @@ model Product {
   firstSeenBR       DateTime? // quando apareceu pela primeira vez no BR
   status            ProductStatus @default(MONITORING)
 
+  // Scores regionais ponderados (calculados a partir de RegionalScore)
+  latamScore        Float?    // score médio LATAM ponderado (MX/CO/AR/CL)
+  asiaScore         Float?    // score médio Ásia ponderado (TH/ID/VN/JP)
+  europeScore       Float?    // score médio Europa ponderado (FR/DE/IT) — monitoramento, sem peso no score BR
+
   createdAt         DateTime  @default(now())
   updatedAt         DateTime  @updatedAt
 
   // Relações
   scores            TrendScore[]
+  regionalScores    RegionalScore[]
   videos            ReferenceVideo[]
   alerts            Alert[]
   matchedProducts   ProductMatch[] @relation("sourceProduct")
@@ -95,6 +101,27 @@ model TrendScore {
   @@index([scoreTotal(sort: Desc)])
   @@index([classification])
   @@index([weekNumber, year])
+}
+
+// ─── SCORE REGIONAL (INTERNACIONAL) ─────────────────────────────────────────
+
+model RegionalScore {
+  id           String   @id @default(cuid())
+  productId    String
+  product      Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+
+  region       String   // MX | CO | AR | CL | TH | ID | VN | JP | FR | DE | IT
+  trendScore   Float    // Google Trends naquela região (0-100)
+  weeklyGrowth Float    // crescimento % semana a semana
+  isExplosive  Boolean  @default(false) // crescimento >= EXPLOSIVE_GROWTH_THRESHOLD
+
+  weekNumber   Int
+  year         Int
+  createdAt    DateTime @default(now())
+
+  @@unique([productId, region, weekNumber, year])
+  @@index([region, trendScore(sort: Desc)])
+  @@index([isExplosive])
 }
 
 // ─── MATCH GLOBAL → BR ──────────────────────────────────────────────────────
@@ -283,4 +310,20 @@ enum ScraperSource {
   VIDEOS_US
   VIDEOS_BR
   SCORE_CALCULATOR // não é scraper de coleta, é o job de processamento — logado aqui pra aparecer no /health
+
+  // TikTok Creative Center — países internacionais novos (LATAM/Ásia/Europa)
+  TIKTOK_CREATIVE_MX
+  TIKTOK_CREATIVE_CO
+  TIKTOK_CREATIVE_AR
+  TIKTOK_CREATIVE_CL
+  TIKTOK_CREATIVE_TH
+  TIKTOK_CREATIVE_ID
+  TIKTOK_CREATIVE_VN
+  TIKTOK_CREATIVE_JP
+  TIKTOK_CREATIVE_FR
+  TIKTOK_CREATIVE_DE
+  TIKTOK_CREATIVE_IT
+  GOOGLE_TRENDS_INTERNATIONAL
+  EXPLOSIVE_DETECTOR // não é scraper de coleta, roda a cada 2h lendo RegionalScore.isExplosive
+  BR_MATCHER // não é scraper de coleta, tenta achar equivalente BR pra produtos globais via Gemini
 }

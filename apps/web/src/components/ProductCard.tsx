@@ -1,4 +1,5 @@
 import Link from "next/link";
+import type { ReactNode } from "react";
 import type { ProductDetail } from "../lib/types";
 import { latestScore } from "../lib/product";
 import { formatBRL, formatCategory } from "../lib/format";
@@ -17,7 +18,7 @@ function Metric({ label, children }: { label: string; children: React.ReactNode 
   );
 }
 
-export function ProductCard({ product }: { product: ProductDetail }) {
+export function ProductCard({ product, badges }: { product: ProductDetail; badges?: ReactNode }) {
   const score = latestScore(product);
 
   return (
@@ -30,6 +31,8 @@ export function ProductCard({ product }: { product: ProductDetail }) {
         </div>
         {score && <OpportunityBadge classification={score.classification} />}
       </div>
+
+      {badges && <div className="flex flex-wrap items-center gap-1.5">{badges}</div>}
 
       <div className="grid grid-cols-3 gap-3">
         <Metric label="Score">{score ? <ScoreBar score={score.scoreTotal} size="md" /> : <span className="text-xs text-spy-muted">—</span>}</Metric>

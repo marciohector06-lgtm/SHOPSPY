@@ -7,7 +7,21 @@ export {
   runTikTokCreativeCenterScraper,
   normalizeCreativeCenterCard,
   mapIndustryToCategory,
+  scrapeTikTokCreativeRegions,
 } from "./global/tiktok-creative-us";
+export {
+  runTikTokCreativeMXScraper,
+  runTikTokCreativeCOScraper,
+  runTikTokCreativeARScraper,
+  runTikTokCreativeCLScraper,
+  runTikTokCreativeTHScraper,
+  runTikTokCreativeIDScraper,
+  runTikTokCreativeVNScraper,
+  runTikTokCreativeJPScraper,
+  runTikTokCreativeFRScraper,
+  runTikTokCreativeDEScraper,
+  runTikTokCreativeITScraper,
+} from "./global/tiktok-creative-international";
 export { runTikTokShopUSScraper, normalizeTikTokShopUSCard } from "./global/tiktok-shop-us";
 export { runAmazonUSScraper } from "./global/amazon-us";
 export { runAmazonUKScraper } from "./global/amazon-uk";
@@ -17,6 +31,8 @@ export {
   computeGlobalTrendsIndex,
   computeGap,
 } from "./global/google-trends-global";
+export { runGoogleTrendsInternationalScraper } from "./global/google-trends-international";
+export { matchProductsWithBR, extractMainKeyword } from "./brazil/br-product-matcher";
 
 export * from "./shared/types";
 export * from "./shared/categoryMap";

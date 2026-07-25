@@ -1,5 +1,6 @@
 import type { Category, ProductStatus } from "@shopspy/shared";
 import type {
+  CategoryHeatmapEntry,
   CategoryTrendsResponse,
   DashboardSummary,
   HealthResponse,
@@ -89,13 +90,27 @@ export function fetchCategoryTrends(token?: string): Promise<CategoryTrendsRespo
   return fetchJson<CategoryTrendsResponse>("/api/v1/dashboard/category-trends", { cache: "no-store" }, token);
 }
 
+/** Heatmap por categoria pra um grupo regional (aba LATAM/Ásia/Europa/Global de /tendencias). */
+export function fetchRegionalHeatmap(
+  region: "LATAM" | "ASIA" | "EUROPE" | "GLOBAL",
+  token?: string
+): Promise<CategoryHeatmapEntry[]> {
+  return fetchJson<CategoryHeatmapEntry[]>(
+    `/api/v1/dashboard/regional-heatmap?region=${region}`,
+    { cache: "no-store" },
+    token
+  );
+}
+
 /**
  * FREE recebe só o top 3 com `delayedAt` preenchido; PRO recebe tudo, em
  * tempo real (delayedAt: null). `filter: "new48h"` troca a ordenação por
- * semana pra "criado nas últimas 48h", limitado a 6 (ver apps/api).
+ * semana pra "criado nas últimas 48h", limitado a 6. `filter:
+ * "latam-opportunity"` retorna produtos altos no LATAM e ainda baixos no BR
+ * (ver apps/api/src/routes/opportunities.ts).
  */
 export function fetchTopOpportunities(
-  params: { filter?: "new48h" } = {},
+  params: { filter?: "new48h" | "latam-opportunity" } = {},
   token?: string
 ): Promise<OpportunitiesTopResponse> {
   const query = params.filter ? `?filter=${params.filter}` : "";

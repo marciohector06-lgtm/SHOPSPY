@@ -133,42 +133,53 @@ export async function persistReferenceVideos(
   }
 }
 
-export async function runTikTokCreativeCenterScraper(): Promise<ScraperRunResult> {
-  return withScraperLog("TIKTOK_CREATIVE_US", "GLOBAL", async () => {
-    const limiter = new RateLimiter(MIN_DELAY_MS);
-    let itemsFound = 0;
-    let itemsNew = 0;
-    let itemsUpdated = 0;
-    const errors: string[] = [];
+/**
+ * Núcleo reutilizável: abre um browser, percorre as regiões dadas no Creative
+ * Center e faz upsert dos produtos encontrados. Parametrizado por região pra
+ * ser compartilhado entre o runner US/UK/AU (3 regiões de uma vez) e cada
+ * runner de país internacional (packages/scrapers/src/global/tiktok-creative-international.ts,
+ * 1 região por chamada) sem duplicar a extração/normalização.
+ */
+export async function scrapeTikTokCreativeRegions(
+  regions: Array<{ region: GlobalRegion; geo: string }>
+): Promise<ScraperRunResult> {
+  const limiter = new RateLimiter(MIN_DELAY_MS);
+  let itemsFound = 0;
+  let itemsNew = 0;
+  let itemsUpdated = 0;
+  const errors: string[] = [];
 
-    const browser = await puppeteer.launch({ headless: true });
-    try {
-      const page = await browser.newPage();
-      await page.setUserAgent(pickUserAgent());
+  const browser = await puppeteer.launch({ headless: true });
+  try {
+    const page = await browser.newPage();
+    await page.setUserAgent(pickUserAgent());
 
-      for (const { region, geo } of REGIONS) {
-        try {
-          await limiter.wait();
-          const cards = await extractTopProducts(page, geo);
-          const items = cards.filter((c) => c.title).map((c) => normalizeCreativeCenterCard(c, region));
+    for (const { region, geo } of regions) {
+      try {
+        await limiter.wait();
+        const cards = await extractTopProducts(page, geo);
+        const items = cards.filter((c) => c.title).map((c) => normalizeCreativeCenterCard(c, region));
 
-          itemsFound += items.length;
-          for (const item of items) {
-            const { created, productId } = await upsertProductFromGlobal(item);
-            if (created) itemsNew++;
-            else itemsUpdated++;
-            if (item.videoUrls?.length) {
-              await persistReferenceVideos(productId, item.videoUrls, region);
-            }
+        itemsFound += items.length;
+        for (const item of items) {
+          const { created, productId } = await upsertProductFromGlobal(item);
+          if (created) itemsNew++;
+          else itemsUpdated++;
+          if (item.videoUrls?.length) {
+            await persistReferenceVideos(productId, item.videoUrls, region);
           }
-        } catch (error) {
-          errors.push(`${region}: ${error instanceof Error ? error.message : String(error)}`);
         }
+      } catch (error) {
+        errors.push(`${region}: ${error instanceof Error ? error.message : String(error)}`);
       }
-    } finally {
-      await browser.close();
     }
+  } finally {
+    await browser.close();
+  }
 
-    return { itemsFound, itemsNew, itemsUpdated, errors };
-  });
+  return { itemsFound, itemsNew, itemsUpdated, errors };
+}
+
+export async function runTikTokCreativeCenterScraper(): Promise<ScraperRunResult> {
+  return withScraperLog("TIKTOK_CREATIVE_US", "GLOBAL", () => scrapeTikTokCreativeRegions(REGIONS));
 }

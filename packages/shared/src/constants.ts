@@ -20,3 +20,69 @@ export const GLOBAL_TRENDS_WEIGHTS = {
 // dos dois lados pra sessão funcionar.
 export const ACCESS_COOKIE_NAME = "shopspy_access";
 export const REFRESH_COOKIE_NAME = "shopspy_refresh";
+
+// Regiões internacionais monitoradas via TikTok Creative Center (Fase 3) e
+// Google Trends internacional (Fase 4). O Creative Center serve a UI sempre
+// em inglês (`/pc/en?region=${geo}`), então não há mapa de categorias por
+// idioma — a categoria vem do mesmo `mapIndustryToCategory` usado por
+// TIKTOK_CREATIVE_US.
+export const INTERNATIONAL_REGIONS = {
+  MX: { name: "México", currency: "MXN", group: "LATAM" },
+  CO: { name: "Colômbia", currency: "COP", group: "LATAM" },
+  AR: { name: "Argentina", currency: "ARS", group: "LATAM" },
+  CL: { name: "Chile", currency: "CLP", group: "LATAM" },
+  FR: { name: "França", currency: "EUR", group: "EUROPE" },
+  DE: { name: "Alemanha", currency: "EUR", group: "EUROPE" },
+  IT: { name: "Itália", currency: "EUR", group: "EUROPE" },
+  TH: { name: "Tailândia", currency: "THB", group: "ASIA" },
+  ID: { name: "Indonésia", currency: "IDR", group: "ASIA" },
+  VN: { name: "Vietnã", currency: "VND", group: "ASIA" },
+  JP: { name: "Japão", currency: "JPY", group: "ASIA" },
+} as const;
+export type InternationalRegion = keyof typeof INTERNATIONAL_REGIONS;
+
+// Pesos para o score internacional ponderado (packages/scorer, Fase 4).
+// Somam 1.0 entre as 11 regiões — Europa fica com peso 0 de propósito
+// (monitoramento, sem influência no score, mesmo critério do spec original).
+export const REGION_WEIGHTS: Record<InternationalRegion, number> = {
+  MX: 0.27,
+  CO: 0.18,
+  AR: 0.11,
+  CL: 0.11,
+  TH: 0.11,
+  ID: 0.09,
+  VN: 0.07,
+  JP: 0.06,
+  FR: 0,
+  DE: 0,
+  IT: 0,
+};
+
+// Pesos específicos para o score LATAM (mais correlacionado com o BR).
+export const LATAM_REGION_WEIGHTS: Record<"MX" | "CO" | "AR" | "CL", number> = {
+  MX: 0.4,
+  CO: 0.3,
+  AR: 0.2,
+  CL: 0.1,
+};
+
+// Pesos específicos para o score Ásia (mesma proporção relativa do REGION_WEIGHTS,
+// reescalados pra somar 1.0 dentro do grupo).
+export const ASIA_REGION_WEIGHTS: Record<"TH" | "ID" | "VN" | "JP", number> = {
+  TH: 0.33,
+  ID: 0.27,
+  VN: 0.21,
+  JP: 0.19,
+};
+
+// Europa é só monitoramento (peso 0 em REGION_WEIGHTS) — sem sinal de qual
+// país pesa mais, então europeScore é uma média simples entre os 3.
+export const EUROPE_REGION_WEIGHTS: Record<"FR" | "DE" | "IT", number> = {
+  FR: 1 / 3,
+  DE: 1 / 3,
+  IT: 1 / 3,
+};
+
+// Crescimento semana-a-semana (%) acima do qual um RegionalScore é marcado
+// como isExplosive (packages/scorer/src/explosive-detector.ts, Fase 5).
+export const EXPLOSIVE_GROWTH_THRESHOLD = 200;

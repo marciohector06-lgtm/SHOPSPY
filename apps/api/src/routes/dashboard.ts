@@ -1,7 +1,9 @@
 import { Router } from "express";
 import { prisma } from "@shopspy/database";
-import { CATEGORIES, SCORE_CLASSES, isoWeek } from "@shopspy/shared";
+import { CATEGORIES, SCORE_CLASSES, isoWeek, INTERNATIONAL_REGIONS, type InternationalRegion } from "@shopspy/shared";
 import { withCache } from "../lib/cache";
+import { validate } from "../lib/validate";
+import { regionalHeatmapQuerySchema, type RegionalHeatmapQuery } from "../schemas";
 
 export function createDashboardRouter(): Router {
   const router = Router();
@@ -93,35 +95,10 @@ export function createDashboardRouter(): Router {
         }),
       ]);
 
-      const heatmapTotals = new Map<string, { sum: number; count: number }>();
-      for (const row of thisWeekScores) {
-        const entry = heatmapTotals.get(row.product.category) ?? { sum: 0, count: 0 };
-        entry.sum += row.scoreTotal;
-        entry.count += 1;
-        heatmapTotals.set(row.product.category, entry);
-      }
-
-      const previousHeatmapTotals = new Map<string, { sum: number; count: number }>();
-      for (const row of previousWeekScores) {
-        const entry = previousHeatmapTotals.get(row.product.category) ?? { sum: 0, count: 0 };
-        entry.sum += row.scoreTotal;
-        entry.count += 1;
-        previousHeatmapTotals.set(row.product.category, entry);
-      }
-
-      const heatmap = CATEGORIES.map((category) => {
-        const entry = heatmapTotals.get(category);
-        const averageScore = entry ? entry.sum / entry.count : null;
-
-        const previousEntry = previousHeatmapTotals.get(category);
-        const previousAverage = previousEntry ? previousEntry.sum / previousEntry.count : null;
-        const weeklyChangePct =
-          averageScore !== null && previousAverage !== null && previousAverage > 0
-            ? ((averageScore - previousAverage) / previousAverage) * 100
-            : null;
-
-        return { category, averageScore, weeklyChangePct };
-      });
+      const heatmap = buildHeatmap(
+        thisWeekScores.map((r) => ({ category: r.product.category, value: r.scoreTotal })),
+        previousWeekScores.map((r) => ({ category: r.product.category, value: r.scoreTotal }))
+      );
 
       const classificationDistribution = Object.fromEntries(SCORE_CLASSES.map((c) => [c, 0])) as Record<
         (typeof SCORE_CLASSES)[number],
@@ -204,5 +181,100 @@ export function createDashboardRouter(): Router {
     res.json(data);
   });
 
+  /**
+   * Heatmap por categoria pra um grupo de regiões internacionais (aba
+   * LATAM/Ásia/Europa/Global de /tendencias — packages/shared/src/constants.ts
+   * INTERNATIONAL_REGIONS.group). GLOBAL usa TrendScore.trendsUS (já existe,
+   * mesma fonte da comparação BR x Global atual); LATAM/ASIA/EUROPE usam
+   * RegionalScore.trendScore (Fase 4, packages/scrapers/src/global/google-trends-international.ts).
+   * Mesmo shape de resposta do heatmap BR (`CategoryHeatmapEntry[]`), pra
+   * reaproveitar o componente CategoryHeatmap sem mudança nenhuma nele.
+   */
+  router.get(
+    "/regional-heatmap",
+    validate(regionalHeatmapQuerySchema, "query"),
+    async (req, res) => {
+      const { region } = req.query as unknown as RegionalHeatmapQuery;
+
+      const data = await withCache(res, `dashboard:regional-heatmap:${region}`, 120, async () => {
+        const { weekNumber, year } = isoWeek(new Date());
+        const previous = isoWeek(new Date(Date.now() - 7 * 24 * 60 * 60 * 1000));
+
+        if (region === "GLOBAL") {
+          const [thisWeek, previousWeek] = await Promise.all([
+            prisma.trendScore.findMany({
+              where: { weekNumber, year },
+              select: { trendsUS: true, product: { select: { category: true } } },
+            }),
+            prisma.trendScore.findMany({
+              where: { weekNumber: previous.weekNumber, year: previous.year },
+              select: { trendsUS: true, product: { select: { category: true } } },
+            }),
+          ]);
+          return buildHeatmap(
+            thisWeek.map((r) => ({ category: r.product.category, value: r.trendsUS })),
+            previousWeek.map((r) => ({ category: r.product.category, value: r.trendsUS }))
+          );
+        }
+
+        const countries = (Object.entries(INTERNATIONAL_REGIONS) as Array<[InternationalRegion, { group: string }]>)
+          .filter(([, config]) => config.group === region)
+          .map(([code]) => code);
+
+        const [thisWeek, previousWeek] = await Promise.all([
+          prisma.regionalScore.findMany({
+            where: { region: { in: countries }, weekNumber, year },
+            select: { trendScore: true, product: { select: { category: true } } },
+          }),
+          prisma.regionalScore.findMany({
+            where: { region: { in: countries }, weekNumber: previous.weekNumber, year: previous.year },
+            select: { trendScore: true, product: { select: { category: true } } },
+          }),
+        ]);
+        return buildHeatmap(
+          thisWeek.map((r) => ({ category: r.product.category, value: r.trendScore })),
+          previousWeek.map((r) => ({ category: r.product.category, value: r.trendScore }))
+        );
+      });
+
+      res.json(data);
+    }
+  );
+
   return router;
+}
+
+function buildHeatmap(
+  thisWeek: Array<{ category: string; value: number }>,
+  previousWeek: Array<{ category: string; value: number }>
+) {
+  const totals = new Map<string, { sum: number; count: number }>();
+  for (const row of thisWeek) {
+    const entry = totals.get(row.category) ?? { sum: 0, count: 0 };
+    entry.sum += row.value;
+    entry.count += 1;
+    totals.set(row.category, entry);
+  }
+
+  const previousTotals = new Map<string, { sum: number; count: number }>();
+  for (const row of previousWeek) {
+    const entry = previousTotals.get(row.category) ?? { sum: 0, count: 0 };
+    entry.sum += row.value;
+    entry.count += 1;
+    previousTotals.set(row.category, entry);
+  }
+
+  return CATEGORIES.map((category) => {
+    const entry = totals.get(category);
+    const averageScore = entry ? entry.sum / entry.count : null;
+
+    const previousEntry = previousTotals.get(category);
+    const previousAverage = previousEntry ? previousEntry.sum / previousEntry.count : null;
+    const weeklyChangePct =
+      averageScore !== null && previousAverage !== null && previousAverage > 0
+        ? ((averageScore - previousAverage) / previousAverage) * 100
+        : null;
+
+    return { category, averageScore, weeklyChangePct };
+  });
 }

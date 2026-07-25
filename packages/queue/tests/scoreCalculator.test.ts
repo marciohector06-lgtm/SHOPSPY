@@ -1,18 +1,26 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { productFindManyMock, trendScoreFindManyMock, trendScoreUpsertMock, scraperLogCreateMock } = vi.hoisted(
-  () => ({
-    productFindManyMock: vi.fn(),
-    trendScoreFindManyMock: vi.fn(),
-    trendScoreUpsertMock: vi.fn(),
-    scraperLogCreateMock: vi.fn(),
-  })
-);
+const {
+  productFindManyMock,
+  productUpdateMock,
+  trendScoreFindManyMock,
+  trendScoreUpsertMock,
+  regionalScoreFindManyMock,
+  scraperLogCreateMock,
+} = vi.hoisted(() => ({
+  productFindManyMock: vi.fn(),
+  productUpdateMock: vi.fn(),
+  trendScoreFindManyMock: vi.fn(),
+  trendScoreUpsertMock: vi.fn(),
+  regionalScoreFindManyMock: vi.fn(),
+  scraperLogCreateMock: vi.fn(),
+}));
 
 vi.mock("@shopspy/database", () => ({
   prisma: {
-    product: { findMany: productFindManyMock },
+    product: { findMany: productFindManyMock, update: productUpdateMock },
     trendScore: { findMany: trendScoreFindManyMock, upsert: trendScoreUpsertMock },
+    regionalScore: { findMany: regionalScoreFindManyMock },
     scraperLog: { create: scraperLogCreateMock },
   },
 }));
@@ -37,8 +45,10 @@ function fakeProduct(overrides: Record<string, unknown> = {}) {
 describe("runScoreCalculator — integração com @shopspy/scorer", () => {
   beforeEach(() => {
     productFindManyMock.mockReset();
+    productUpdateMock.mockReset().mockResolvedValue({});
     trendScoreFindManyMock.mockReset().mockResolvedValue([]);
     trendScoreUpsertMock.mockReset().mockResolvedValue({});
+    regionalScoreFindManyMock.mockReset().mockResolvedValue([]);
     scraperLogCreateMock.mockReset().mockResolvedValue({});
   });
 
@@ -117,6 +127,30 @@ describe("runScoreCalculator — integração com @shopspy/scorer", () => {
     expect(log.region).toBe("GLOBAL");
     expect(log.status).toBe("success");
     expect(log.itemsFound).toBe(1);
+  });
+
+  it("popula latamScore/asiaScore/europeScore do produto a partir do RegionalScore da semana atual", async () => {
+    productFindManyMock.mockResolvedValue([fakeProduct({ id: "p1" })]);
+    regionalScoreFindManyMock.mockResolvedValue([
+      { productId: "p1", region: "MX", trendScore: 80 },
+      { productId: "p1", region: "TH", trendScore: 40 },
+      { productId: "p1", region: "FR", trendScore: 20 },
+    ]);
+
+    await runScoreCalculator();
+
+    expect(productUpdateMock).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: {
+        latamScore: expect.any(Number),
+        asiaScore: expect.any(Number),
+        europeScore: expect.any(Number),
+      },
+    });
+    const data = productUpdateMock.mock.calls[0]![0].data;
+    expect(data.latamScore).toBeCloseTo(80 * 0.4, 1); // só MX tem score, resto do grupo conta como 0
+    expect(data.asiaScore).toBeCloseTo(40 * 0.33, 1); // só TH tem score
+    expect(data.europeScore).toBeCloseTo(20 / 3, 1); // só FR tem score
   });
 
   it("se o cálculo lançar antes de terminar, grava ScraperLog com status error e propaga o erro", async () => {

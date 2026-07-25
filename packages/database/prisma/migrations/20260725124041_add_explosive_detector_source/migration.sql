@@ -1,0 +1,2 @@
+-- AlterEnum
+ALTER TYPE "ScraperSource" ADD VALUE 'EXPLOSIVE_DETECTOR';

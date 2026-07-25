@@ -1,6 +1,11 @@
 import { prisma, type Product, type TrendScore } from "@shopspy/database";
-import { isoWeek } from "@shopspy/shared";
-import { scoreProduct } from "@shopspy/scorer";
+import { isoWeek, type InternationalRegion } from "@shopspy/shared";
+import {
+  scoreProduct,
+  calculateLatamScore,
+  calculateAsiaScore,
+  calculateEuropeScore,
+} from "@shopspy/scorer";
 
 export interface ScoreCalculatorResult {
   itemsFound: number;
@@ -110,7 +115,47 @@ async function calculateScores(): Promise<ScoreCalculatorResult> {
     }
   }
 
-  return { itemsFound: products.length, itemsNew: scored, itemsUpdated: 0, errors };
+  const regionalUpdated = await updateRegionalScores(weekNumber, year, errors);
+
+  return { itemsFound: products.length, itemsNew: scored, itemsUpdated: regionalUpdated, errors };
+}
+
+/**
+ * Popula Product.latamScore/asiaScore/europeScore a partir do RegionalScore
+ * da semana ISO atual (packages/scrapers/src/global/google-trends-international.ts).
+ * Roda para todo produto com dado regional essa semana — independente de ter
+ * ou não amazonRankUS/UK, ao contrário do loop principal acima, já que
+ * TikTok Creative Center/Trends internacional não dependem da Amazon.
+ */
+async function updateRegionalScores(weekNumber: number, year: number, errors: string[]): Promise<number> {
+  const regionalScores = await prisma.regionalScore.findMany({ where: { weekNumber, year } });
+
+  const byProduct = new Map<string, Partial<Record<InternationalRegion, number>>>();
+  for (const score of regionalScores) {
+    const region = score.region as InternationalRegion;
+    const existing = byProduct.get(score.productId) ?? {};
+    existing[region] = score.trendScore;
+    byProduct.set(score.productId, existing);
+  }
+
+  let updated = 0;
+  for (const [productId, scores] of byProduct) {
+    try {
+      await prisma.product.update({
+        where: { id: productId },
+        data: {
+          latamScore: calculateLatamScore(scores),
+          asiaScore: calculateAsiaScore(scores),
+          europeScore: calculateEuropeScore(scores),
+        },
+      });
+      updated++;
+    } catch (error) {
+      errors.push(`regionalScore ${productId}: ${error instanceof Error ? error.message : String(error)}`);
+    }
+  }
+
+  return updated;
 }
 
 interface ScoreContext {

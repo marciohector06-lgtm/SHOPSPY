@@ -5,3 +5,4 @@ export { generateUGCScript, streamUGCScript, type UGCScript, type UGCScriptInput
 export { analyzeOpportunity, type OpportunityAnalysisInput } from "./opportunity-analyst";
 export { parseJsonDefensive } from "./jsonParser";
 export { renderOpportunityEmail, type OpportunityEmailInput, type RenderedEmail } from "./email-template";
+export { renderExplosiveGrowthEmail, type ExplosiveGrowthEmailInput } from "./email-template";

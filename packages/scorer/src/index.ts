@@ -8,6 +8,7 @@ export * from "./engine";
 export * from "./gap-analyzer";
 export * from "./window-estimator";
 export * from "./ugc-classifier";
+export * from "./regional-score";
 
 export interface ScoreProductInput {
   name: string;

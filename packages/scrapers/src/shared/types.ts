@@ -27,7 +27,23 @@ export interface ScraperRunResult {
 }
 
 export type GlobalPlatform = "tiktokCreative" | "tiktokShopUS" | "amazonUS" | "amazonUK" | "aliexpress";
-export type GlobalRegion = "US" | "UK" | "AU" | "CA";
+export type GlobalRegion =
+  | "US"
+  | "UK"
+  | "AU"
+  | "CA"
+  // TikTok Creative Center internacional (LATAM/Ásia/Europa)
+  | "MX"
+  | "CO"
+  | "AR"
+  | "CL"
+  | "TH"
+  | "ID"
+  | "VN"
+  | "JP"
+  | "FR"
+  | "DE"
+  | "IT";
 
 /**
  * Formato normalizado que todo scraper global retorna, antes do upsert.

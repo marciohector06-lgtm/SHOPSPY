@@ -35,6 +35,9 @@ function fakeProduct(overrides: Partial<ProductDetail> = {}): ProductDetail {
     amazonRankUK: null,
     tiktokImpressions: null,
     tiktokCTR: null,
+    latamScore: null,
+    asiaScore: null,
+    europeScore: null,
     createdAt: new Date().toISOString(),
     updatedAt: new Date().toISOString(),
     scores: [

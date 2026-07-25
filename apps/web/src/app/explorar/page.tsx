@@ -6,6 +6,7 @@ import {
   BannerSection,
   CategoriesSection,
   CreatorsStubSection,
+  LatamOpportunitySection,
   New48hSection,
   ScraperStatusSection,
   SectionCard,
@@ -23,6 +24,7 @@ export default function ExplorarPage() {
   const token = getAccessTokenCookie();
   const topOpportunitiesPromise = fetchTopOpportunities({}, token);
   const new48hPromise = fetchTopOpportunities({ filter: "new48h" }, token);
+  const latamOpportunityPromise = fetchTopOpportunities({ filter: "latam-opportunity" }, token);
   const dashboardPromise = fetchDashboardSummary(token);
   const healthPromise = fetchHealth();
 
@@ -57,6 +59,20 @@ export default function ExplorarPage() {
           }
         >
           <New48hSection dataPromise={new48hPromise} />
+        </Suspense>
+      </SectionCard>
+
+      <SectionCard title="Chegando pelo LATAM">
+        <Suspense
+          fallback={
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {Array.from({ length: 3 }).map((_, i) => (
+                <SkeletonProductCard key={i} />
+              ))}
+            </div>
+          }
+        >
+          <LatamOpportunitySection dataPromise={latamOpportunityPromise} />
         </Suspense>
       </SectionCard>
 

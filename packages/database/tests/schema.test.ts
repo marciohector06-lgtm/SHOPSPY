@@ -12,6 +12,7 @@ describe("Prisma schema shape", () => {
         "Product",
         "ProductMatch",
         "ReferenceVideo",
+        "RegionalScore",
         "ScraperLog",
         "Session",
         "TrendScore",
