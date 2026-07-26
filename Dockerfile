@@ -44,4 +44,10 @@ RUN npx turbo run build --filter=@shopspy/api
 
 EXPOSE 4000
 
-CMD ["npm", "run", "start", "--workspace=apps/api"]
+# SERVICE_ROLE=worker roda o worker (consome a fila BullMQ); qualquer outro
+# valor (ou ausente) roda a API HTTP — mesma imagem, dois serviços Railway
+# diferentes (SHOPSPY = API, worker = worker), cada um com sua própria
+# variável SERVICE_ROLE. Existe porque o "Custom Start Command" do Railway
+# não é aplicado em deploys via Dockerfile (fica salvo mas o container
+# continua usando o CMD da imagem).
+CMD if [ "$SERVICE_ROLE" = "worker" ]; then npm run worker --workspace=apps/api; else npm run start --workspace=apps/api; fi
