@@ -22,7 +22,11 @@ echo API OK! Iniciando coleta...
 
 echo Coletando TIKTOK_SHOP_BR...
 curl -s -X POST %API%/internal/jobs/TIKTOK_SHOP_BR/trigger -H "X-Internal-Token: %TOKEN%"
-timeout /t 90 /nobreak > nul
+REM "ping" em vez de "timeout": o Git Bash tem um timeout proprio (coreutils,
+REM sintaxe diferente) que pode sombrear o timeout nativo do Windows via PATH
+REM e quebrar "/t 90 /nobreak" — ping -n 91 == ~90s de espera, funciona igual
+REM rodando por duplo clique, cmd.exe ou git bash.
+ping -n 91 127.0.0.1 > nul
 
 echo Recalculando scores...
 curl -s -X POST %API%/internal/jobs/SCORE_CALCULATOR/trigger -H "X-Internal-Token: %TOKEN%"
