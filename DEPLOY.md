@@ -100,15 +100,17 @@ Guarde `DATABASE_URL` e `DIRECT_URL` — vão pro Railway (serviço API **e** Wo
 
 ## 6. Railway — serviço do Worker
 
-Mesmo repositório, **serviço novo** dentro do mesmo projeto Railway (não reaproveita o serviço da API — são dois processos rodando em paralelo):
+Mesmo repositório, **serviço novo** dentro do mesmo projeto Railway (não reaproveita o serviço da API — são dois processos rodando em paralelo).
+
+**Importante:** o deploy é via Dockerfile (não Nixpacks) — nesse modo, o **"Start Command" e o "Custom Config File" configurados pelo dashboard/API do Railway são salvos mas não têm efeito real no deploy**, que sempre roda o `CMD` da imagem e sempre lê `railway.json` da raiz do repo (confirmado testando: 3 tentativas diferentes de sobrescrever isso por serviço falharam silenciosamente antes de descobrir essa limitação). Por isso o Worker usa um mecanismo diferente:
 
 1. **New Service → mesmo repo GitHub**.
-2. **Settings**:
-   - **Root Directory**: `/`
-   - **Build Command**: `npm install && npx prisma generate --schema=packages/database/prisma/schema.prisma && npx turbo run build --filter=@shopspy/api...`
-   - **Start Command**: `npm run worker:start --workspace=@shopspy/api`
-3. **Sem Health Check HTTP** — o Worker não expõe porta nenhuma (não é servidor HTTP), então não marque health check por path aqui; deixe o Railway monitorar só se o processo está vivo (restart automático em crash já é o comportamento padrão).
-4. Mesmas variáveis de ambiente da API (banco, Redis, chaves de API dos scrapers/Gemini/Resend) — o Worker é quem de fato chama os scrapers, o Gemini e o Resend.
+2. **Settings → Root Directory**: `/` (só isso — não configure Start Command nem Config File, não vão pegar).
+3. Nas variáveis de ambiente desse serviço, adicione `SERVICE_ROLE=worker` — o `CMD` do `Dockerfile` lê essa variável e decide entre `npm run start` (API, comportamento padrão sem a variável) e `npm run worker` (Worker). É a mesma imagem Docker para os dois serviços, só muda essa variável.
+4. **Sem Health Check HTTP configurável por serviço** (mesma limitação acima — `railway.json` aponta `/api/v1/health` pra todo serviço do repo, e não dá pra desligar por serviço). Por isso o Worker (`apps/api/src/worker.ts`) sobe um servidor HTTP mínimo só pra responder `200` nesse path — não é uma rota real, existe só pra passar no healthcheck do Railway. A saúde de verdade do Worker é "está consumindo a fila", visível nos logs (`ShopSpy worker rodando — N agendamentos ativos`) e no `/health` da API (campo `lastRun` de cada scraper).
+5. Mesmas variáveis de ambiente da API (banco, Redis, chaves de API dos scrapers/Gemini/Resend) — o Worker é quem de fato chama os scrapers, o Gemini e o Resend.
+
+Se um deploy do Worker ficar preso (nem `railway redeploy` nem a mutation `deploymentRedeploy` da API do Railway destravam — aconteceu uma vez), a saída mais rápida é deletar e recriar o serviço (`railway service delete --service worker` e `railway add --service worker --repo ... --branch main`) em vez de insistir tentando destravar o mesmo deployment.
 
 ---
 
@@ -178,3 +180,20 @@ Cookies de sessão são `httpOnly` com `Domain` explícito (`COOKIE_DOMAIN`) —
 - [ ] `POST /internal/jobs/SHOPEE_BR/trigger` com o header `X-Internal-Token` certo enfileira o job (confirma Worker rodando e consumindo a fila).
 - [ ] Painel do Railway mostra os dois serviços (API e Worker) com status "Active" — se o Worker cair sozinho, confira os logs: geralmente é `REDIS_URL`/`DATABASE_URL` errado ou ausente nesse serviço especificamente (são configurados por serviço, não é automático copiar de um pro outro).
 - [ ] Roda `npm run stress` (ver `tests/stress/README.md`) contra o ambiente antes de anunciar o lançamento — é o jeito de saber se a infra escolhida aqui aguenta tráfego real antes de descobrir isso com usuários de verdade.
+
+---
+
+## 11. Coleta manual com IP residencial
+
+Alguns scrapers bloqueiam IP de datacenter (Railway) e só funcionam de um IP residencial normal — hoje isso é só o `TIKTOK_SHOP_BR` (loja pública do TikTok Shop). Rode da sua máquina, uma vez por dia, contra a **API de produção**:
+
+```bash
+npm run collect:tiktok       # Linux/Mac/Git Bash
+npm run collect:tiktok:win   # Windows (CMD), sem precisar de bash
+```
+
+O script dispara `TIKTOK_SHOP_BR` e recalcula os scores (`SCORE_CALCULATOR`) direto em produção via `POST /internal/jobs/:source/trigger`.
+
+**`TIKTOK_CREATIVE_*` (US + 11 países internacionais) fica de fora desse script de propósito** — não é bloqueio de IP: o TikTok Creative Center passou a exigir uma conta TikTok Business autenticada (a API interna dele devolve `"invalid user"` pra qualquer IP, residencial ou não, confirmado por inspeção de rede). Rodar da sua máquina não resolve isso. Fica registrado como limitação conhecida até haver uma conta TikTok Business disponível para autenticar (o que tem risco de flag/suspensão da conta, por ser automação contra os Termos do TikTok — decisão do dono da conta, não algo pra fazer sem confirmar).
+
+Os scrapers globais/BR restantes (`collect-br.sh`, `collect-global.sh`) já cobrem o resto e podem rodar de qualquer IP — hoje eles ainda apontam pra `localhost:4000` (populam o banco local, não produção); ajuste a URL neles também se quiser usá-los pra popular produção da mesma forma.

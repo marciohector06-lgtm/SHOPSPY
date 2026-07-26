@@ -22,7 +22,9 @@
     "db:studio": "npm run studio --workspace=@shopspy/database",
     "collect:br": "bash scripts/collect-br.sh",
     "collect:global": "bash scripts/collect-global.sh",
-    "collect:all": "bash scripts/collect-all.sh"
+    "collect:all": "bash scripts/collect-all.sh",
+    "collect:tiktok": "bash scripts/collect-tiktok.sh",
+    "collect:tiktok:win": "scripts\\collect-tiktok.bat"
   },
   "devDependencies": {
     "@types/node": "^22.9.0",
