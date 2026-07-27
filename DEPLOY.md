@@ -183,17 +183,33 @@ Cookies de sessão são `httpOnly` com `Domain` explícito (`COOKIE_DOMAIN`) —
 
 ---
 
-## 11. Coleta manual com IP residencial
+## 11. Scripts que precisam rodar com IP residencial
 
-Alguns scrapers bloqueiam IP de datacenter (Railway) e só funcionam de um IP residencial normal — hoje isso é só o `TIKTOK_SHOP_BR` (loja pública do TikTok Shop). Rode da sua máquina, uma vez por dia, contra a **API de produção**:
+Alguns scrapers bloqueiam IP de datacenter (Railway) e só funcionam de um IP residencial normal. Hoje são dois scripts, cada um cobrindo um grupo de fontes — os dois apontam pra **API de produção**, não pro localhost.
+
+### `collect-tiktok` — `TIKTOK_SHOP_BR`, diário
 
 ```bash
 npm run collect:tiktok       # Linux/Mac/Git Bash
 npm run collect:tiktok:win   # Windows (CMD), sem precisar de bash
 ```
 
-O script dispara `TIKTOK_SHOP_BR` e recalcula os scores (`SCORE_CALCULATOR`) direto em produção via `POST /internal/jobs/:source/trigger`.
+Dispara `TIKTOK_SHOP_BR` e recalcula os scores (`SCORE_CALCULATOR`) direto em produção via `POST /internal/jobs/:source/trigger`. Rode uma vez por dia.
 
 **`TIKTOK_CREATIVE_*` (US + 11 países internacionais) fica de fora desse script de propósito** — não é bloqueio de IP: o TikTok Creative Center passou a exigir uma conta TikTok Business autenticada (a API interna dele devolve `"invalid user"` pra qualquer IP, residencial ou não, confirmado por inspeção de rede). Rodar da sua máquina não resolve isso. Fica registrado como limitação conhecida até haver uma conta TikTok Business disponível para autenticar (o que tem risco de flag/suspensão da conta, por ser automação contra os Termos do TikTok — decisão do dono da conta, não algo pra fazer sem confirmar).
+
+### `collect-trends-international.bat` — `GOOGLE_TRENDS_INTERNATIONAL` + `EXPLOSIVE_DETECTOR` + `BR_MATCHER`, semanal ou quando quiser dados regionais frescos
+
+```
+scripts\collect-trends-international.bat   # Windows (CMD ou duplo clique)
+```
+
+Dispara os três na sequência (a ordem importa pros dois primeiros):
+
+1. **`GOOGLE_TRENDS_INTERNATIONAL`** — Google Trends pras 11 regiões internacionais (LATAM: MX/CO/AR/CL, Ásia: TH/ID/VN/JP, Europa: FR/DE/IT) de todo produto monitorado. Popula `RegionalScore`. Processa muita coisa (produtos × 11 regiões) — pode chegar perto do timeout de job de 8min mesmo com IP residencial funcionando, só pelo volume. O script espera ~8min antes de seguir; se não tiver terminado a tempo, confira `/api/v1/health` depois.
+2. **`EXPLOSIVE_DETECTOR`** — lê `RegionalScore.isExplosive` (só populado pelo passo 1) e manda e-mail pros usuários PRO com alerta ativo no produto. Roda vazio (sem achar nada) se o passo 1 não tiver terminado ainda.
+3. **`BR_MATCHER`** — casa produto global sem equivalente BR ainda (via Shopee, com fallback pro Mercado Livre se a Shopee bloquear com 403). Independente dos outros dois — só roda por último pra não competir por rate limit/CPU com eles.
+
+**Limitação conhecida do fallback Mercado Livre**: mesmo com IP residencial, o fallback só é acionado se a Shopee responder 403 primeiro — e o `robots.txt` do `api.mercadolibre.com` tem `Disallow: /` pra `User-agent: *` (bloqueia geral, independente de IP). O código respeita `robots.txt` antes de cada request (mesma prática de todos os scrapers deste projeto), então o fallback ML nunca chega a fazer a chamada de verdade enquanto esse `robots.txt` continuar assim — fica registrado como limitação conhecida, não um bug do fallback em si (a lógica está implementada e testada, só não tem uma fonte real pra usar hoje).
 
 Os scrapers globais/BR restantes (`collect-br.sh`, `collect-global.sh`) já cobrem o resto e podem rodar de qualquer IP — hoje eles ainda apontam pra `localhost:4000` (populam o banco local, não produção); ajuste a URL neles também se quiser usá-los pra popular produção da mesma forma.

@@ -1,12 +1,14 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-const { findManyMock, updateMock, findSemanticMatchMock, fetchJsonMock, isPathAllowedMock } = vi.hoisted(() => ({
-  findManyMock: vi.fn(),
-  updateMock: vi.fn(),
-  findSemanticMatchMock: vi.fn(),
-  fetchJsonMock: vi.fn(),
-  isPathAllowedMock: vi.fn(),
-}));
+const { findManyMock, updateMock, findSemanticMatchMock, findSemanticMatchWithScoreMock, fetchJsonMock, isPathAllowedMock } =
+  vi.hoisted(() => ({
+    findManyMock: vi.fn(),
+    updateMock: vi.fn(),
+    findSemanticMatchMock: vi.fn(),
+    findSemanticMatchWithScoreMock: vi.fn(),
+    fetchJsonMock: vi.fn(),
+    isPathAllowedMock: vi.fn(),
+  }));
 
 vi.mock("@shopspy/database", () => ({
   prisma: {
@@ -15,7 +17,10 @@ vi.mock("@shopspy/database", () => ({
   },
 }));
 
-vi.mock("@shopspy/ai", () => ({ findSemanticMatch: findSemanticMatchMock }));
+vi.mock("@shopspy/ai", () => ({
+  findSemanticMatch: findSemanticMatchMock,
+  findSemanticMatchWithScore: findSemanticMatchWithScoreMock,
+}));
 vi.mock("../src/shared/http", () => ({ fetchJson: fetchJsonMock }));
 vi.mock("../src/shared/robots", () => ({ isPathAllowed: isPathAllowedMock }));
 // Evita o delay real de SOURCE_MIN_DELAY_MS.SHOPEE_BR (3s) entre produtos no teste.
@@ -45,9 +50,14 @@ describe("matchProductsWithBR", () => {
     findManyMock.mockReset();
     updateMock.mockReset().mockResolvedValue({});
     findSemanticMatchMock.mockReset();
+    findSemanticMatchWithScoreMock.mockReset();
     fetchJsonMock.mockReset();
     isPathAllowedMock.mockReset().mockResolvedValue(true);
   });
+
+  function shopeeForbiddenError() {
+    return { isAxiosError: true, response: { status: 403 } };
+  }
 
   function fakeGlobalProduct(overrides: Record<string, unknown> = {}) {
     return {
@@ -124,6 +134,68 @@ describe("matchProductsWithBR", () => {
     expect(fetchJsonMock).not.toHaveBeenCalled();
     expect(updateMock).not.toHaveBeenCalled();
     expect(result.errors).toHaveLength(0);
+  });
+
+  it("Shopee retorna 403: cai pro Mercado Livre e salva se similarity > 0.7", async () => {
+    findManyMock.mockResolvedValue([fakeGlobalProduct()]);
+    fetchJsonMock
+      .mockRejectedValueOnce(shopeeForbiddenError())
+      .mockResolvedValueOnce({ results: [{ id: "MLB123", title: "Liquidificador Portátil", price: 89.9, sold_quantity: 500 }] });
+    findSemanticMatchWithScoreMock.mockResolvedValue({ index: 0, similarity: 0.85 });
+
+    const result = await matchProductsWithBR();
+
+    expect(fetchJsonMock).toHaveBeenCalledTimes(2);
+    expect(fetchJsonMock).toHaveBeenLastCalledWith(
+      "https://api.mercadolibre.com/sites/MLB/search",
+      expect.objectContaining({ params: { q: "portable blender", limit: 5 } })
+    );
+    expect(updateMock).toHaveBeenCalledWith({
+      where: { id: "p1" },
+      data: {
+        priceBR: 89.9,
+        soldCountBR: 500,
+        ratingBR: undefined,
+        firstSeenBR: expect.any(Date),
+        externalIds: { amazonUS: "B001", mercadoLivre: "MLB123" },
+      },
+    });
+    expect(result.itemsUpdated).toBe(1);
+  });
+
+  it("Shopee 403 + fallback ML com similarity <= 0.7: não salva (evita match fraco)", async () => {
+    findManyMock.mockResolvedValue([fakeGlobalProduct()]);
+    fetchJsonMock
+      .mockRejectedValueOnce(shopeeForbiddenError())
+      .mockResolvedValueOnce({ results: [{ id: "MLB999", title: "Produto Genérico Qualquer", price: 10 }] });
+    findSemanticMatchWithScoreMock.mockResolvedValue({ index: 0, similarity: 0.4 });
+
+    const result = await matchProductsWithBR();
+
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(result.itemsUpdated).toBe(0);
+  });
+
+  it("Shopee 403 + ML sem candidatos: não chama o Gemini, não salva", async () => {
+    findManyMock.mockResolvedValue([fakeGlobalProduct()]);
+    fetchJsonMock.mockRejectedValueOnce(shopeeForbiddenError()).mockResolvedValueOnce({ results: [] });
+
+    const result = await matchProductsWithBR();
+
+    expect(findSemanticMatchWithScoreMock).not.toHaveBeenCalled();
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(result.itemsUpdated).toBe(0);
+  });
+
+  it("erro da Shopee que NÃO é 403 (ex.: timeout): não tenta o ML, fica só o erro registrado", async () => {
+    findManyMock.mockResolvedValue([fakeGlobalProduct()]);
+    fetchJsonMock.mockRejectedValueOnce(new Error("timeout"));
+
+    const result = await matchProductsWithBR();
+
+    expect(fetchJsonMock).toHaveBeenCalledTimes(1); // não tentou o ML
+    expect(updateMock).not.toHaveBeenCalled();
+    expect(result.errors).toEqual([expect.stringContaining("timeout")]);
   });
 
   it("erro num produto não impede os outros — erro fica registrado", async () => {

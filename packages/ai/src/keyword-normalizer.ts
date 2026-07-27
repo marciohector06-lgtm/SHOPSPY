@@ -55,3 +55,37 @@ export async function findSemanticMatch(
     throw error;
   }
 }
+
+const MATCH_SCORE_SCHEMA = {
+  type: "object",
+  properties: { index: { type: "integer" }, similarity: { type: "number" } },
+  required: ["index", "similarity"],
+};
+
+/**
+ * Mesma ideia de findSemanticMatch, mas devolve o score (0-1) junto — usado
+ * onde precisamos aplicar um threshold explícito (ex.: fallback Mercado
+ * Livre em br-product-matcher.ts, que só aceita similarity > 0.7) em vez de
+ * confiar só no julgamento interno do prompt de "-1 se nenhum for parecido".
+ */
+export async function findSemanticMatchWithScore(
+  productEn: string,
+  productsBR: string[]
+): Promise<{ index: number; similarity: number }> {
+  if (productsBR.length === 0) return { index: -1, similarity: 0 };
+
+  try {
+    const list = productsBR.map((p, i) => `${i}:${p}`).join("|");
+    const result = await callGeminiJson<{ index: number; similarity: number }>({
+      namespace: "semantic-match-score",
+      cacheInput: { productEn, productsBR },
+      prompt: `Produto: "${productEn}". Candidatos (índice:nome): ${list}. Responda o índice do candidato mais similar e um score de similaridade de 0 a 1 (1 = mesmo produto, 0 = nada a ver). Se nenhum candidato for parecido, responda index -1 e similarity 0.`,
+      responseSchema: MATCH_SCORE_SCHEMA,
+    });
+    const index = result.index >= 0 && result.index < productsBR.length ? result.index : -1;
+    return { index, similarity: result.similarity };
+  } catch (error) {
+    if (error instanceof GeminiUnavailableError) return { index: -1, similarity: 0 };
+    throw error;
+  }
+}
