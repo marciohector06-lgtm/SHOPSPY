@@ -67,3 +67,24 @@ describe("<Topbar /> — busca global", () => {
     expect(pushMock).not.toHaveBeenCalled();
   });
 });
+
+describe("<Topbar /> — menu do avatar", () => {
+  it("clicar no avatar mostra o link 'Meus alertas' apontando pra /alertas", () => {
+    renderTopbar();
+    expect(screen.queryByText("Meus alertas")).toBeNull();
+
+    fireEvent.click(screen.getByRole("button", { name: "Abrir menu da conta" }));
+
+    const link = screen.getByRole("link", { name: /Meus alertas/ });
+    expect(link).toHaveProperty("href", expect.stringContaining("/alertas"));
+  });
+
+  it("clicar no backdrop fecha o menu", () => {
+    renderTopbar();
+    fireEvent.click(screen.getByRole("button", { name: "Abrir menu da conta" }));
+    expect(screen.getByText("Meus alertas")).toBeTruthy();
+
+    fireEvent.click(screen.getByRole("button", { name: "Fechar menu da conta" }));
+    expect(screen.queryByText("Meus alertas")).toBeNull();
+  });
+});

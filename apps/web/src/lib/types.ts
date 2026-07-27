@@ -141,6 +141,33 @@ export interface CategoryTrendsResponse {
   classificationDistribution: Record<ScoreClass, number>;
 }
 
+export interface AlertProduct {
+  id: string;
+  name: string;
+  category: Category;
+  imageUrl: string | null;
+  scores: Array<{ scoreTotal: number }>;
+}
+
+export interface Alert {
+  id: string;
+  threshold: number;
+  channel: string;
+  active: boolean;
+  product: AlertProduct;
+}
+
+export interface AlertsUsage {
+  used: number;
+  /** null = sem limite (PRO). */
+  limit: number | null;
+}
+
+export interface AlertsResponse {
+  items: Alert[];
+  usage: AlertsUsage;
+}
+
 /** Espelha ScraperStatusMessage (packages/queue/src/statusPublisher.ts) — payload recebido via SSE. */
 export interface ScraperStatusMessage {
   source: string;

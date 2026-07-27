@@ -13,6 +13,13 @@ export function createAlertsRouter(): Router {
   const router = Router();
   router.use(authMiddleware);
 
+  /**
+   * Alerta duplicado (mesmo produto) atualiza o threshold/canal em vez de
+   * criar outro — @@unique([userId, productId]) no schema garante isso no
+   * banco, aqui só evitamos o 500 de constraint violation fazendo o
+   * findUnique primeiro. Atualizar um alerta existente NÃO conta contra o
+   * limite do FREE (só criação nova incrementa alertsUsed).
+   */
   router.post("/", validate(createAlertSchema, "body"), async (req, res) => {
     const body = req.body as CreateAlertBody;
     const userId = req.user!.id;
@@ -20,6 +27,19 @@ export function createAlertsRouter(): Router {
     const product = await prisma.product.findUnique({ where: { id: body.productId } });
     if (!product) {
       res.status(404).json({ error: "produto não encontrado" });
+      return;
+    }
+
+    const existing = await prisma.alert.findUnique({
+      where: { userId_productId: { userId, productId: body.productId } },
+    });
+
+    if (existing) {
+      const updated = await prisma.alert.update({
+        where: { id: existing.id },
+        data: { threshold: body.threshold, channel: body.channel, active: true },
+      });
+      res.status(200).json(updated);
       return;
     }
 
@@ -42,13 +62,35 @@ export function createAlertsRouter(): Router {
     res.status(201).json(alert);
   });
 
+  /**
+   * `usage.limit` vem `null` pro PRO (sem limite) — o frontend usa isso
+   * pra decidir se mostra o contador "X de Y alertas disponíveis" no modal
+   * de criação (FREE) ou nada (PRO).
+   */
   router.get("/", async (req, res) => {
-    const alerts = await prisma.alert.findMany({
-      where: { userId: req.user!.id },
-      include: { product: { select: { id: true, name: true, category: true } } },
-      orderBy: { createdAt: "desc" },
-    });
-    res.json(alerts);
+    const [alerts, user] = await Promise.all([
+      prisma.alert.findMany({
+        where: { userId: req.user!.id },
+        include: {
+          product: {
+            select: {
+              id: true,
+              name: true,
+              category: true,
+              imageUrl: true,
+              scores: { orderBy: [{ year: "desc" as const }, { weekNumber: "desc" as const }], take: 1 },
+            },
+          },
+        },
+        orderBy: { createdAt: "desc" },
+      }),
+      req.user!.plan === "FREE" ? prisma.user.findUnique({ where: { id: req.user!.id } }) : null,
+    ]);
+
+    const usage =
+      req.user!.plan === "FREE" ? { used: user?.alertsUsed ?? 0, limit: user?.alertsLimit ?? 0 } : { used: alerts.length, limit: null };
+
+    res.json({ items: alerts, usage });
   });
 
   router.patch("/:id/toggle", validate(idParamSchema, "params"), async (req, res) => {

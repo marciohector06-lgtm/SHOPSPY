@@ -1,5 +1,7 @@
 import type { Category, ProductStatus } from "@shopspy/shared";
 import type {
+  Alert,
+  AlertsResponse,
   CategoryHeatmapEntry,
   CategoryTrendsResponse,
   DashboardSummary,
@@ -47,12 +49,19 @@ async function fetchJson<T>(path: string, init?: RequestInit, token?: string): P
     if (response.status === 403 && body?.error === "PRO_REQUIRED") {
       throw new ApiError("Esse recurso é exclusivo do plano PRO.", 403, "PRO_REQUIRED", body.upgradeUrl);
     }
+    if (response.status === 403 && body?.error === "ALERT_LIMIT_REACHED") {
+      throw new ApiError("Limite de alertas atingido — faça upgrade para PRO.", 403, "ALERT_LIMIT_REACHED", body.upgradeUrl);
+    }
     if (response.status === 401) {
       throw new ApiError("Sessão expirada — faça login novamente.", 401, "UNAUTHORIZED");
     }
     throw new ApiError(`A API respondeu com erro (${response.status}).`, response.status);
   }
 
+  // 204 (ex.: DELETE /alerts/:id) não tem corpo — response.json() quebraria.
+  if (response.status === 204) {
+    return undefined as T;
+  }
   return (await response.json()) as T;
 }
 
@@ -118,6 +127,33 @@ export function fetchTopOpportunities(
 ): Promise<OpportunitiesTopResponse> {
   const query = params.filter ? `?filter=${params.filter}` : "";
   return fetchJson<OpportunitiesTopResponse>(`/api/v1/opportunities/top${query}`, { cache: "no-store" }, token);
+}
+
+export function fetchAlerts(token?: string): Promise<AlertsResponse> {
+  return fetchJson<AlertsResponse>("/api/v1/alerts", { cache: "no-store" }, token);
+}
+
+export interface CreateAlertParams {
+  productId: string;
+  threshold: number;
+  channel: "email";
+}
+
+/** 201 = criado novo; 200 = já existia pro mesmo produto, threshold atualizado (dedupe no backend). */
+export function createAlert(params: CreateAlertParams): Promise<Alert> {
+  return fetchJson<Alert>("/api/v1/alerts", {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify(params),
+  });
+}
+
+export function toggleAlert(id: string): Promise<Alert> {
+  return fetchJson<Alert>(`/api/v1/alerts/${id}/toggle`, { method: "PATCH" });
+}
+
+export function deleteAlert(id: string): Promise<void> {
+  return fetchJson<void>(`/api/v1/alerts/${id}`, { method: "DELETE" });
 }
 
 export function streamUrl(): string {

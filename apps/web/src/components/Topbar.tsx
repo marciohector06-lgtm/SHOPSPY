@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { usePathname, useRouter } from "next/navigation";
-import { EyeIcon, PackageIcon, TargetIcon, UsersIcon, PlayIcon, TrendingUpIcon, SearchIcon, LogoMark } from "./icons";
+import { EyeIcon, PackageIcon, TargetIcon, UsersIcon, PlayIcon, TrendingUpIcon, SearchIcon, BellIcon, LogoMark } from "./icons";
 import { PeriodSelector } from "./PeriodSelector";
 import { LogoutButton } from "./LogoutButton";
 import type { AccessTokenPayload } from "../lib/jwt";
@@ -95,10 +95,49 @@ function GlobalSearch() {
   );
 }
 
+function AvatarMenu({ user }: { user: AccessTokenPayload }) {
+  const [open, setOpen] = useState(false);
+  const initials = (user.name ?? user.email).slice(0, 1).toUpperCase();
+
+  return (
+    <div className="relative">
+      <button type="button" onClick={() => setOpen(true)} aria-label="Abrir menu da conta" className="flex h-8 w-8 items-center justify-center rounded-full">
+        {user.avatarUrl ? (
+          <img src={user.avatarUrl} alt="" className="h-8 w-8 rounded-full" />
+        ) : (
+          <span className="flex h-8 w-8 items-center justify-center rounded-full bg-spy-surface text-xs font-semibold text-spy-text">
+            {initials}
+          </span>
+        )}
+      </button>
+
+      {open && (
+        <>
+          <button
+            type="button"
+            aria-label="Fechar menu da conta"
+            onClick={() => setOpen(false)}
+            className="fixed inset-0 z-[60]"
+          />
+          <div className="absolute right-0 top-10 z-[61] w-44 rounded-md border border-spy-border bg-spy-card p-1 shadow-xl">
+            <Link
+              href="/alertas"
+              onClick={() => setOpen(false)}
+              className="flex min-h-11 items-center gap-2 rounded-md px-3 text-sm text-spy-text hover:bg-spy-hover"
+            >
+              <BellIcon className="h-4 w-4" />
+              Meus alertas
+            </Link>
+          </div>
+        </>
+      )}
+    </div>
+  );
+}
+
 export function Topbar({ user }: { user: AccessTokenPayload }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
-  const initials = (user.name ?? user.email).slice(0, 1).toUpperCase();
 
   return (
     <>
@@ -131,13 +170,7 @@ export function Topbar({ user }: { user: AccessTokenPayload }) {
             <PeriodSelector />
           </div>
           <span className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${PLAN_BADGE[user.plan]}`}>{user.plan}</span>
-          {user.avatarUrl ? (
-            <img src={user.avatarUrl} alt="" className="h-8 w-8 rounded-full" />
-          ) : (
-            <span className="flex h-8 w-8 items-center justify-center rounded-full bg-spy-surface text-xs font-semibold text-spy-text">
-              {initials}
-            </span>
-          )}
+          <AvatarMenu user={user} />
           <div className="hidden sm:block">
             <LogoutButton />
           </div>

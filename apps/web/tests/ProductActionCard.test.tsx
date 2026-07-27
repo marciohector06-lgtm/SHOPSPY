@@ -4,9 +4,14 @@ import { render, screen, fireEvent } from "@testing-library/react";
 import type { ProductDetail, TrendScoreEntry } from "../src/lib/types";
 import { ProductActionCard } from "../src/components/ProductActionCard";
 
-vi.mock("../src/lib/api", () => ({
-  streamScript: vi.fn(async () => {}),
-}));
+vi.mock("../src/lib/api", async () => {
+  const actual = await vi.importActual<typeof import("../src/lib/api")>("../src/lib/api");
+  return {
+    ...actual,
+    streamScript: vi.fn(async () => {}),
+    fetchAlerts: vi.fn().mockResolvedValue({ items: [], usage: { used: 0, limit: 3 } }),
+  };
+});
 
 function fakeProduct(overrides: Partial<ProductDetail> = {}): ProductDetail {
   return {
@@ -76,5 +81,12 @@ describe("<ProductActionCard />", () => {
     expect(screen.queryByRole("dialog")).toBeNull();
     fireEvent.click(screen.getByRole("button", { name: /Gerar Roteiro UGC/ }));
     expect(screen.getByRole("dialog")).toBeTruthy();
+  });
+
+  it("clicar em 'Criar alerta' abre o CreateAlertModal", async () => {
+    render(<ProductActionCard product={fakeProduct({ name: "Produto Alertável" })} score={fakeScore()} />);
+    expect(screen.queryByRole("dialog")).toBeNull();
+    fireEvent.click(screen.getByRole("button", { name: "Criar alerta" }));
+    expect(await screen.findByText("Criar alerta — Produto Alertável")).toBeTruthy();
   });
 });

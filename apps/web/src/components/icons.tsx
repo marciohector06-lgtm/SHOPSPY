@@ -162,6 +162,20 @@ export function SearchIcon({ className = BASE }: IconProps) {
   );
 }
 
+export function BellIcon({ className = BASE }: IconProps) {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
+      <path
+        d="M6 10.5a6 6 0 0 1 12 0v3.5l1.5 3H4.5l1.5-3v-3.5Z"
+        stroke="currentColor"
+        strokeWidth="1.6"
+        strokeLinejoin="round"
+      />
+      <path d="M9.5 19.5a2.5 2.5 0 0 0 5 0" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export function ImagePlaceholderIcon({ className = BASE }: IconProps) {
   return (
     <svg viewBox="0 0 24 24" fill="none" className={className} aria-hidden>
