@@ -9,6 +9,7 @@ import { formatCategory } from "../lib/format";
 import { OpportunityCard } from "./OpportunityCard";
 import { PreviewBadge } from "./PreviewBadge";
 import { UGCScriptModal } from "./UGCScriptModal";
+import { CreateAlertModal } from "./CreateAlertModal";
 import { EmptyState } from "./ui/EmptyState";
 import { UpgradeState } from "./ui/UpgradeState";
 import { Skeleton, SkeletonProductCard } from "./ui/Skeleton";
@@ -48,6 +49,7 @@ export function OpportunitiesView({ items, isFree }: OpportunitiesViewProps) {
   const [sort, setSort] = useState<SortMode>("score");
   const [visibleCount, setVisibleCount] = useState(REVEAL_CHUNK);
   const [scriptProduct, setScriptProduct] = useState<ProductDetail | null>(null);
+  const [alertProduct, setAlertProduct] = useState<ProductDetail | null>(null);
   const sentinelRef = useRef<HTMLDivElement | null>(null);
 
   const categories = useMemo(() => Array.from(new Set(items.map((p) => p.category))).sort(), [items]);
@@ -99,7 +101,12 @@ export function OpportunitiesView({ items, isFree }: OpportunitiesViewProps) {
         <PreviewBadge />
         <div className="flex flex-col gap-4">
           {items.map((product) => (
-            <OpportunityCard key={product.id} product={product} onOpenScript={() => setScriptProduct(product)} />
+            <OpportunityCard
+              key={product.id}
+              product={product}
+              onOpenScript={() => setScriptProduct(product)}
+              onOpenAlert={() => setAlertProduct(product)}
+            />
           ))}
         </div>
 
@@ -122,6 +129,14 @@ export function OpportunitiesView({ items, isFree }: OpportunitiesViewProps) {
             productName={scriptProduct.name}
             isOpen
             onClose={() => setScriptProduct(null)}
+          />
+        )}
+        {alertProduct && (
+          <CreateAlertModal
+            productId={alertProduct.id}
+            productName={alertProduct.name}
+            isOpen
+            onClose={() => setAlertProduct(null)}
           />
         )}
       </div>
@@ -198,7 +213,12 @@ export function OpportunitiesView({ items, isFree }: OpportunitiesViewProps) {
         <>
           <div className="flex flex-col gap-4">
             {visible.map((product) => (
-              <OpportunityCard key={product.id} product={product} onOpenScript={() => setScriptProduct(product)} />
+              <OpportunityCard
+                key={product.id}
+                product={product}
+                onOpenScript={() => setScriptProduct(product)}
+                onOpenAlert={() => setAlertProduct(product)}
+              />
             ))}
           </div>
           {visibleCount < filteredSorted.length && (
@@ -215,6 +235,14 @@ export function OpportunitiesView({ items, isFree }: OpportunitiesViewProps) {
           productName={scriptProduct.name}
           isOpen
           onClose={() => setScriptProduct(null)}
+        />
+      )}
+      {alertProduct && (
+        <CreateAlertModal
+          productId={alertProduct.id}
+          productName={alertProduct.name}
+          isOpen
+          onClose={() => setAlertProduct(null)}
         />
       )}
     </div>

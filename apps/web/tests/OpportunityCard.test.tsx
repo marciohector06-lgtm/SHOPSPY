@@ -55,30 +55,37 @@ function fakeProduct(overrides: Partial<ProductDetail> = {}): ProductDetail {
 
 describe("<OpportunityCard />", () => {
   it("mostra comissão em destaque, sem badge NOVO quando criado há mais de 48h", () => {
-    render(<OpportunityCard product={fakeProduct()} onOpenScript={() => {}} />);
+    render(<OpportunityCard product={fakeProduct()} onOpenScript={() => {}} onOpenAlert={() => {}} />);
     expect(screen.getByText("R$ 45,00")).toBeTruthy();
     expect(screen.queryByText("NOVO")).toBeNull();
   });
 
   it("mostra badge NOVO quando createdAt está dentro das últimas 48h", () => {
-    render(<OpportunityCard product={fakeProduct({ createdAt: new Date().toISOString() })} onOpenScript={() => {}} />);
+    render(<OpportunityCard product={fakeProduct({ createdAt: new Date().toISOString() })} onOpenScript={() => {}} onOpenAlert={() => {}} />);
     expect(screen.getByText("NOVO")).toBeTruthy();
   });
 
   it("GapIndicator mostra 'Dados BR em coleta...' quando trendsBR é 0", () => {
-    render(<OpportunityCard product={fakeProduct()} onOpenScript={() => {}} />);
+    render(<OpportunityCard product={fakeProduct()} onOpenScript={() => {}} onOpenAlert={() => {}} />);
     expect(screen.getByText("Dados BR em coleta...")).toBeTruthy();
   });
 
   it("chama onOpenScript ao clicar em 'Roteiro UGC'", () => {
     const onOpenScript = vi.fn();
-    render(<OpportunityCard product={fakeProduct()} onOpenScript={onOpenScript} />);
+    render(<OpportunityCard product={fakeProduct()} onOpenScript={onOpenScript} onOpenAlert={() => {}} />);
     fireEvent.click(screen.getByRole("button", { name: /Roteiro UGC/ }));
     expect(onOpenScript).toHaveBeenCalledTimes(1);
   });
 
+  it("chama onOpenAlert ao clicar em 'Criar alerta' — única entrada de alerta que FREE alcança (a outra, /produto/[id], é bloqueada)", () => {
+    const onOpenAlert = vi.fn();
+    render(<OpportunityCard product={fakeProduct()} onOpenScript={() => {}} onOpenAlert={onOpenAlert} />);
+    fireEvent.click(screen.getByRole("button", { name: /Criar alerta/ }));
+    expect(onOpenAlert).toHaveBeenCalledTimes(1);
+  });
+
   it("'Ver produto' aponta pra /produto/:id", () => {
-    render(<OpportunityCard product={fakeProduct({ id: "abc123" })} onOpenScript={() => {}} />);
+    render(<OpportunityCard product={fakeProduct({ id: "abc123" })} onOpenScript={() => {}} onOpenAlert={() => {}} />);
     expect(screen.getByRole("link", { name: "Ver produto" })).toHaveProperty("href", expect.stringContaining("/produto/abc123"));
   });
 });

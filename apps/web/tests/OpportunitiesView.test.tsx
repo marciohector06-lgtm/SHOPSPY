@@ -16,6 +16,12 @@ class FakeIntersectionObserver {
 
 vi.stubGlobal("IntersectionObserver", FakeIntersectionObserver);
 
+const { fetchAlertsMock } = vi.hoisted(() => ({ fetchAlertsMock: vi.fn() }));
+vi.mock("../src/lib/api", async () => {
+  const actual = await vi.importActual<typeof import("../src/lib/api")>("../src/lib/api");
+  return { ...actual, fetchAlerts: fetchAlertsMock };
+});
+
 function fakeScore(overrides: Partial<TrendScoreEntry> = {}): TrendScoreEntry {
   return {
     id: "s1",
@@ -71,6 +77,7 @@ function fakeProduct(overrides: Partial<ProductDetail> = {}): ProductDetail {
 describe("<OpportunitiesView /> — PRO", () => {
   beforeEach(() => {
     observerCallback = null;
+    fetchAlertsMock.mockReset().mockResolvedValue({ items: [], usage: { used: 0, limit: null } });
   });
 
   it("filtra por classificação (botão toggle) sem novo fetch", () => {
@@ -150,9 +157,20 @@ describe("<OpportunitiesView /> — PRO", () => {
     fireEvent.click(screen.getByRole("button", { name: /Roteiro UGC/ }));
     expect(screen.getByRole("dialog")).toBeTruthy();
   });
+
+  it("clicar em 'Criar alerta' abre o CreateAlertModal", async () => {
+    const items = [fakeProduct({ name: "Produto Com Alerta" })];
+    render(<OpportunitiesView items={items} isFree={false} />);
+    fireEvent.click(screen.getByRole("button", { name: /Criar alerta/ }));
+    expect(await screen.findByText("Criar alerta — Produto Com Alerta")).toBeTruthy();
+  });
 });
 
 describe("<OpportunitiesView /> — FREE", () => {
+  beforeEach(() => {
+    fetchAlertsMock.mockReset().mockResolvedValue({ items: [], usage: { used: 1, limit: 3 } });
+  });
+
   it("mostra o badge PRÉVIA, os produtos reais (delayedAt), e o teaser borrado com upgrade — sem filtros", () => {
     const items = [fakeProduct({ name: "Produto Prévia 1" }), fakeProduct({ name: "Produto Prévia 2" })];
     render(<OpportunitiesView items={items} isFree />);
@@ -162,5 +180,15 @@ describe("<OpportunitiesView /> — FREE", () => {
     expect(screen.getByText("Produto Prévia 2")).toBeTruthy();
     expect(screen.getByText(/tempo real, sem atraso/)).toBeTruthy();
     expect(screen.queryByRole("button", { name: "Todas" })).toBeNull();
+  });
+
+  it("FREE também alcança 'Criar alerta' nos 3 cards reais — única entrada de alerta que esse plano consegue usar", async () => {
+    const items = [fakeProduct({ name: "Produto Prévia 1" })];
+    render(<OpportunitiesView items={items} isFree />);
+
+    fireEvent.click(screen.getByRole("button", { name: /Criar alerta/ }));
+
+    expect(await screen.findByText("Criar alerta — Produto Prévia 1")).toBeTruthy();
+    expect(await screen.findByText("2 de 3 alertas disponíveis")).toBeTruthy();
   });
 });

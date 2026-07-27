@@ -7,7 +7,7 @@ import { ScoreBar } from "./ScoreBar";
 import { OpportunityBadge } from "./OpportunityBadge";
 import { GapIndicator } from "./GapIndicator";
 import { WindowBadge } from "./WindowBadge";
-import { BoltIcon } from "./icons";
+import { BoltIcon, BellIcon } from "./icons";
 
 const NEW_THRESHOLD_MS = 48 * 60 * 60 * 1000;
 
@@ -15,7 +15,18 @@ function isNew(createdAt: string): boolean {
   return Date.now() - new Date(createdAt).getTime() < NEW_THRESHOLD_MS;
 }
 
-export function OpportunityCard({ product, onOpenScript }: { product: ProductDetail; onOpenScript: () => void }) {
+interface OpportunityCardProps {
+  product: ProductDetail;
+  onOpenScript: () => void;
+  /**
+   * /oportunidades é a única tela onde FREE vê produtos reais — sem esse
+   * botão aqui, FREE nunca alcançava "Criar alerta" (a outra entrada,
+   * /produto/[id], é 100% bloqueada pra esse plano).
+   */
+  onOpenAlert: () => void;
+}
+
+export function OpportunityCard({ product, onOpenScript, onOpenAlert }: OpportunityCardProps) {
   const score = latestScore(product);
 
   return (
@@ -63,6 +74,14 @@ export function OpportunityCard({ product, onOpenScript }: { product: ProductDet
         >
           <BoltIcon className="h-3.5 w-3.5" />
           Roteiro UGC
+        </button>
+        <button
+          type="button"
+          onClick={onOpenAlert}
+          className="inline-flex h-11 w-full items-center justify-center gap-1 rounded-md border border-spy-border px-3 text-xs font-medium text-spy-text transition-colors hover:border-spy-indigo/40 hover:text-spy-indigo-light sm:w-auto"
+        >
+          <BellIcon className="h-3.5 w-3.5" />
+          Criar alerta
         </button>
       </div>
     </div>
