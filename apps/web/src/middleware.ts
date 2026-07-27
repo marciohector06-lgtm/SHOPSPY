@@ -2,7 +2,7 @@ import { NextResponse, type NextRequest } from "next/server";
 import { ACCESS_COOKIE_NAME } from "@shopspy/shared";
 import { verifyAccessToken } from "./lib/jwt";
 
-const PROTECTED_PREFIXES = ["/explorar", "/produtos", "/oportunidades", "/produto", "/criadores", "/videos", "/tendencias"];
+const PROTECTED_PREFIXES = ["/explorar", "/produtos", "/oportunidades", "/produto", "/criadores", "/videos", "/tendencias", "/busca"];
 
 export async function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -31,5 +31,6 @@ export const config = {
     "/criadores/:path*",
     "/videos/:path*",
     "/tendencias/:path*",
+    "/busca/:path*",
   ],
 };

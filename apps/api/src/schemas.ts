@@ -24,6 +24,11 @@ export const productsListQuerySchema = z.object({
     .default(20),
   category: z.enum(CATEGORIES).optional(),
   status: z.enum(PRODUCT_STATUSES).optional(),
+  // Busca livre por nome (ILIKE) — sem paginação por cursor, sempre no
+  // máximo 20 resultados (ver createProductsRouter). 1-100 chars: vazio
+  // não filtra nada, e um termo absurdamente longo não faz sentido numa
+  // busca de nome de produto.
+  q: z.string().trim().min(1).max(100).optional(),
 });
 
 export type ProductsListQuery = z.infer<typeof productsListQuerySchema>;

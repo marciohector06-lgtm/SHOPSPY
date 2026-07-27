@@ -1,9 +1,9 @@
 "use client";
 
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { EyeIcon, PackageIcon, TargetIcon, UsersIcon, PlayIcon, TrendingUpIcon, LogoMark } from "./icons";
+import { usePathname, useRouter } from "next/navigation";
+import { EyeIcon, PackageIcon, TargetIcon, UsersIcon, PlayIcon, TrendingUpIcon, SearchIcon, LogoMark } from "./icons";
 import { PeriodSelector } from "./PeriodSelector";
 import { LogoutButton } from "./LogoutButton";
 import type { AccessTokenPayload } from "../lib/jwt";
@@ -46,6 +46,55 @@ function NavLinks({ pathname, onNavigate }: { pathname: string | null; onNavigat
   );
 }
 
+function GlobalSearch() {
+  const router = useRouter();
+  const [open, setOpen] = useState(false);
+  const [value, setValue] = useState("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (open) inputRef.current?.focus();
+  }, [open]);
+
+  function submit() {
+    const term = value.trim();
+    if (!term) return;
+    router.push(`/busca?q=${encodeURIComponent(term)}`);
+    setOpen(false);
+  }
+
+  return (
+    <div className="flex items-center">
+      <input
+        ref={inputRef}
+        type="search"
+        value={value}
+        onChange={(e) => setValue(e.target.value)}
+        onKeyDown={(e) => {
+          if (e.key === "Enter") submit();
+          if (e.key === "Escape") setOpen(false);
+        }}
+        onBlur={() => {
+          if (!value.trim()) setOpen(false);
+        }}
+        placeholder="Buscar produto..."
+        aria-label="Buscar produto"
+        className={`rounded-md border border-spy-border bg-spy-surface text-sm text-spy-text placeholder:text-spy-faint transition-all duration-200 ${
+          open ? "mr-1 w-32 px-3 py-2 opacity-100 sm:w-52" : "w-0 border-0 px-0 py-0 opacity-0"
+        }`}
+      />
+      <button
+        type="button"
+        onClick={() => (open ? submit() : setOpen(true))}
+        aria-label="Buscar produto"
+        className="flex h-11 w-11 shrink-0 items-center justify-center rounded-md text-spy-muted hover:bg-spy-hover hover:text-spy-text"
+      >
+        <SearchIcon className="h-4 w-4" />
+      </button>
+    </div>
+  );
+}
+
 export function Topbar({ user }: { user: AccessTokenPayload }) {
   const pathname = usePathname();
   const [drawerOpen, setDrawerOpen] = useState(false);
@@ -77,6 +126,7 @@ export function Topbar({ user }: { user: AccessTokenPayload }) {
         </div>
 
         <div className="flex items-center gap-3">
+          <GlobalSearch />
           <div className="hidden sm:block">
             <PeriodSelector />
           </div>

@@ -147,6 +147,73 @@ describe("GET /api/v1/products — paginação cursor-based", () => {
   });
 });
 
+describe("GET /api/v1/products?q= — busca por nome", () => {
+  beforeEach(() => {
+    fakeRedis.clear();
+    findManyMock.mockReset();
+  });
+
+  it("busca com ILIKE (contains, insensitive), sem cursor, no máximo 20", async () => {
+    findManyMock.mockResolvedValue(PRODUCTS);
+
+    const res = await request(buildApp())
+      .get("/api/v1/products?q=" + encodeURIComponent("calça jeans"))
+      .set("Authorization", proAuthHeader);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toEqual(PRODUCTS);
+    expect(res.body.nextCursor).toBeNull();
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { name: { contains: "calça jeans", mode: "insensitive" } },
+        take: 20,
+      })
+    );
+    // Modo busca não usa cursor mesmo que um seja passado por engano.
+    expect(findManyMock).not.toHaveBeenCalledWith(expect.objectContaining({ cursor: expect.anything() }));
+  });
+
+  it("sem resultado: items vazio, não erro", async () => {
+    findManyMock.mockResolvedValue([]);
+
+    const res = await request(buildApp())
+      .get("/api/v1/products?q=produtoinexistentexyz")
+      .set("Authorization", proAuthHeader);
+
+    expect(res.status).toBe(200);
+    expect(res.body.items).toEqual([]);
+  });
+
+  it("combina com category ao mesmo tempo, se os dois vierem", async () => {
+    findManyMock.mockResolvedValue([]);
+
+    await request(buildApp())
+      .get("/api/v1/products?q=soro&category=BEAUTY_SKINCARE")
+      .set("Authorization", proAuthHeader);
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { category: "BEAUTY_SKINCARE", name: { contains: "soro", mode: "insensitive" } },
+      })
+    );
+  });
+
+  it("q vazio (só espaços) é rejeitado com 400, não vira busca vazia", async () => {
+    const res = await request(buildApp()).get("/api/v1/products?q=" + encodeURIComponent("   ")).set("Authorization", proAuthHeader);
+
+    expect(res.status).toBe(400);
+    expect(findManyMock).not.toHaveBeenCalled();
+  });
+
+  it("plano FREE também recebe 403 PRO_REQUIRED na busca — mesma regra do endpoint inteiro", async () => {
+    const freeToken = `Bearer ${await signAccessToken({ sub: "user3", email: "free2@shopspy.com", plan: "FREE", name: null, avatarUrl: null })}`;
+    const res = await request(buildApp()).get("/api/v1/products?q=calça").set("Authorization", freeToken);
+
+    expect(res.status).toBe(403);
+    expect(findManyMock).not.toHaveBeenCalled();
+  });
+});
+
 describe("GET /api/v1/products/:id", () => {
   beforeEach(() => {
     fakeRedis.clear();

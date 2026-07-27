@@ -61,6 +61,8 @@ export interface FetchProductsParams {
   limit?: number;
   category?: Category;
   status?: ProductStatus;
+  /** Busca por nome (ILIKE) — quando presente, a API ignora cursor/limit e devolve no máximo 20 itens. */
+  q?: string;
 }
 
 export function fetchProducts(params: FetchProductsParams = {}, token?: string): Promise<ProductsPage> {
@@ -69,6 +71,7 @@ export function fetchProducts(params: FetchProductsParams = {}, token?: string):
   if (params.limit) search.set("limit", String(params.limit));
   if (params.category) search.set("category", params.category);
   if (params.status) search.set("status", params.status);
+  if (params.q) search.set("q", params.q);
 
   const query = search.toString();
   return fetchJson<ProductsPage>(`/api/v1/products${query ? `?${query}` : ""}`, { cache: "no-store" }, token);

@@ -5,6 +5,8 @@ import { withCache } from "../lib/cache";
 import { validate } from "../lib/validate";
 import { idParamSchema, productsListQuerySchema, type ProductsListQuery } from "../schemas";
 
+const SEARCH_MAX_RESULTS = 20;
+
 export function createProductsRouter(): Router {
   const router = Router();
 
@@ -12,20 +14,25 @@ export function createProductsRouter(): Router {
    * Paginação cursor-based (não offset/limit): o cursor é o id do último
    * item da página anterior. Buscamos `limit + 1` para saber se existe
    * próxima página sem precisar de um COUNT(*) separado.
+   *
+   * `?q=` troca pra modo busca: ILIKE %termo% no nome, sem cursor, sempre
+   * no máximo SEARCH_MAX_RESULTS — é uma busca pontual do catálogo
+   * inteiro, não uma página de uma listagem maior.
    */
   router.get("/", validate(productsListQuerySchema, "query"), async (req, res) => {
     const query = req.query as unknown as ProductsListQuery;
-    const cacheKey = `products:list:${query.category ?? "*"}:${query.status ?? "*"}:${query.cursor ?? "start"}:${query.limit}`;
+    const cacheKey = `products:list:${query.category ?? "*"}:${query.status ?? "*"}:${query.q ?? "*"}:${query.cursor ?? "start"}:${query.limit}`;
 
     const page = await withCache(res, cacheKey, 30, async () => {
       const rows = await prisma.product.findMany({
         where: {
           ...(query.category ? { category: query.category } : {}),
           ...(query.status ? { status: query.status } : {}),
+          ...(query.q ? { name: { contains: query.q, mode: "insensitive" as const } } : {}),
         },
         orderBy: { id: "asc" },
-        take: query.limit + 1,
-        ...(query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
+        take: query.q ? SEARCH_MAX_RESULTS : query.limit + 1,
+        ...(!query.q && query.cursor ? { cursor: { id: query.cursor }, skip: 1 } : {}),
         include: {
           // desc + reverse (não asc+take direto): asc+take pegaria as 4
           // semanas MAIS ANTIGAS do histórico, não as mais recentes.
@@ -33,6 +40,10 @@ export function createProductsRouter(): Router {
           videos: { orderBy: { likes: "desc" }, take: 2 },
         },
       });
+
+      if (query.q) {
+        return { items: rows.map((row) => ({ ...row, scores: [...row.scores].reverse() })), nextCursor: null };
+      }
 
       const hasMore = rows.length > query.limit;
       const page = hasMore ? rows.slice(0, query.limit) : rows;
