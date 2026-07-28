@@ -6,13 +6,14 @@ import type { Category, ScoreClass } from "@shopspy/shared";
 import { CATEGORIES, SCORE_CLASSES } from "@shopspy/shared";
 import type { ProductDetail } from "../lib/types";
 import { latestScore } from "../lib/product";
-import { ApiError, fetchProducts } from "../lib/api";
+import { ApiError, fetchProducts, type ProductRegion } from "../lib/api";
 import { formatBRL, formatCategory, formatCompactNumber } from "../lib/format";
 import { ProductImage } from "./ProductImage";
 import { ProductCard } from "./ProductCard";
 import { ScoreBar } from "./ScoreBar";
 import { OpportunityBadge, CLASSIFICATION_LABELS } from "./OpportunityBadge";
 import { WindowBadge } from "./WindowBadge";
+import { SourceBadges } from "./SourceBadges";
 import { UGCScriptModal } from "./UGCScriptModal";
 import { EmptyState } from "./ui/EmptyState";
 import { ErrorState } from "./ui/ErrorState";
@@ -66,9 +67,11 @@ function SortIcon({ active, direction }: { active: boolean; direction: SortDirec
 interface ProductsTableProps {
   initialItems: ProductDetail[];
   initialCursor: string | null;
+  /** Aba de região ativa (?region= de /produtos) — repassada pro "carregar mais" manter o mesmo filtro. */
+  region?: ProductRegion;
 }
 
-export function ProductsTable({ initialItems, initialCursor }: ProductsTableProps) {
+export function ProductsTable({ initialItems, initialCursor, region }: ProductsTableProps) {
   const router = useRouter();
   const [items, setItems] = useState(initialItems);
   const [cursor, setCursor] = useState(initialCursor);
@@ -113,7 +116,7 @@ export function ProductsTable({ initialItems, initialCursor }: ProductsTableProp
     setLoadingMore(true);
     setLoadMoreError(null);
     try {
-      const page = await fetchProducts({ cursor, limit: LOAD_MORE_SIZE });
+      const page = await fetchProducts({ cursor, limit: LOAD_MORE_SIZE, region });
       setItems((prev) => [...prev, ...page.items]);
       setCursor(page.nextCursor);
     } catch (error) {
@@ -195,6 +198,7 @@ export function ProductsTable({ initialItems, initialCursor }: ProductsTableProp
                       </button>
                     </th>
                   ))}
+                  <th className="px-3 py-2 font-medium">Fonte</th>
                   <th className="px-3 py-2 font-medium">Ação</th>
                 </tr>
               </thead>
@@ -225,6 +229,9 @@ export function ProductsTable({ initialItems, initialCursor }: ProductsTableProp
                         {product.amazonRankUS ? `#${product.amazonRankUS}` : product.amazonRankUK ? `#${product.amazonRankUK}` : "—"}
                       </td>
                       <td className="px-3 py-2 text-xs text-spy-muted">{formatCategory(product.category)}</td>
+                      <td className="px-3 py-2">
+                        <SourceBadges externalIds={product.externalIds} />
+                      </td>
                       <td className="px-3 py-2" onClick={(e) => e.stopPropagation()}>
                         <button
                           type="button"

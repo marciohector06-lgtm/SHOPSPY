@@ -214,6 +214,70 @@ describe("GET /api/v1/products?q= — busca por nome", () => {
   });
 });
 
+describe("GET /api/v1/products?region= — aba de país/região de /produtos", () => {
+  beforeEach(() => {
+    fakeRedis.clear();
+    findManyMock.mockReset();
+  });
+
+  it("region=BR filtra por presença de dado no Brasil (preço ou vendidos)", async () => {
+    findManyMock.mockResolvedValue([]);
+
+    await request(buildApp()).get("/api/v1/products?region=BR").set("Authorization", proAuthHeader);
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { OR: [{ priceBR: { not: null } }, { soldCountBR: { not: null } }] },
+      })
+    );
+  });
+
+  it("region=GLOBAL filtra por presença de dado nos EUA/UK", async () => {
+    findManyMock.mockResolvedValue([]);
+
+    await request(buildApp()).get("/api/v1/products?region=GLOBAL").set("Authorization", proAuthHeader);
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: {
+          OR: [{ priceUS: { not: null } }, { amazonRankUS: { not: null } }, { amazonRankUK: { not: null } }],
+        },
+      })
+    );
+  });
+
+  it("region=LATAM filtra por latamScore acima do threshold, combinando com category", async () => {
+    findManyMock.mockResolvedValue([]);
+
+    await request(buildApp())
+      .get("/api/v1/products?region=LATAM&category=FITNESS")
+      .set("Authorization", proAuthHeader);
+
+    expect(findManyMock).toHaveBeenCalledWith(
+      expect.objectContaining({
+        where: { category: "FITNESS", latamScore: { gt: 30 } },
+      })
+    );
+  });
+
+  it("sem region, não filtra por região (comportamento anterior preservado)", async () => {
+    findManyMock.mockResolvedValue([]);
+
+    await request(buildApp()).get("/api/v1/products").set("Authorization", proAuthHeader);
+
+    expect(findManyMock).toHaveBeenCalledWith(expect.objectContaining({ where: {} }));
+  });
+
+  it("region inválida responde 400", async () => {
+    const res = await request(buildApp())
+      .get("/api/v1/products?region=ANTARCTICA")
+      .set("Authorization", proAuthHeader);
+
+    expect(res.status).toBe(400);
+    expect(findManyMock).not.toHaveBeenCalled();
+  });
+});
+
 describe("GET /api/v1/products/:id", () => {
   beforeEach(() => {
     fakeRedis.clear();

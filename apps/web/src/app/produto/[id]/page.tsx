@@ -7,6 +7,7 @@ import { ProductImage } from "../../../components/ProductImage";
 import { ProductComparison } from "../../../components/ProductComparison";
 import { ScoreHistoryChart } from "../../../components/ScoreHistoryChart";
 import { ProductActionCard } from "../../../components/ProductActionCard";
+import { SourceBadges } from "../../../components/SourceBadges";
 import { VideoCard } from "../../../components/VideoCard";
 import { EmptyState } from "../../../components/ui/EmptyState";
 import { ErrorState } from "../../../components/ui/ErrorState";
@@ -60,6 +61,7 @@ export default async function ProdutoDetailPage({ params }: { params: { id: stri
         <div className="flex min-w-0 flex-col gap-1">
           <h1 className="text-lg font-semibold text-spy-text">{product.name}</h1>
           <span className="text-sm text-spy-muted">{formatCategory(product.category)}</span>
+          <SourceBadges externalIds={product.externalIds} />
         </div>
       </div>
 

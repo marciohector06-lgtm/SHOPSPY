@@ -65,11 +65,15 @@ async function fetchJson<T>(path: string, init?: RequestInit, token?: string): P
   return (await response.json()) as T;
 }
 
+export type ProductRegion = "BR" | "LATAM" | "ASIA" | "EUROPE" | "GLOBAL";
+
 export interface FetchProductsParams {
   cursor?: string;
   limit?: number;
   category?: Category;
   status?: ProductStatus;
+  /** Aba de país/região de /produtos — sem valor = "Todas". */
+  region?: ProductRegion;
   /** Busca por nome (ILIKE) — quando presente, a API ignora cursor/limit e devolve no máximo 20 itens. */
   q?: string;
 }
@@ -80,6 +84,7 @@ export function fetchProducts(params: FetchProductsParams = {}, token?: string):
   if (params.limit) search.set("limit", String(params.limit));
   if (params.category) search.set("category", params.category);
   if (params.status) search.set("status", params.status);
+  if (params.region) search.set("region", params.region);
   if (params.q) search.set("q", params.q);
 
   const query = search.toString();

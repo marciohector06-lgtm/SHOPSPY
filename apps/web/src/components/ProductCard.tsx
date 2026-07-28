@@ -8,6 +8,7 @@ import { ScoreBar } from "./ScoreBar";
 import { OpportunityBadge } from "./OpportunityBadge";
 import { GapIndicator } from "./GapIndicator";
 import { WindowBadge } from "./WindowBadge";
+import { SourceBadges } from "./SourceBadges";
 
 function Metric({ label, children }: { label: string; children: React.ReactNode }) {
   return (
@@ -32,7 +33,12 @@ export function ProductCard({ product, badges }: { product: ProductDetail; badge
         {score && <OpportunityBadge classification={score.classification} />}
       </div>
 
-      {badges && <div className="flex flex-wrap items-center gap-1.5">{badges}</div>}
+      {(badges || product.externalIds) && (
+        <div className="flex flex-wrap items-center gap-1.5">
+          {badges}
+          <SourceBadges externalIds={product.externalIds} />
+        </div>
+      )}
 
       <div className="grid grid-cols-3 gap-3">
         <Metric label="Score">{score ? <ScoreBar score={score.scoreTotal} size="md" /> : <span className="text-xs text-spy-muted">—</span>}</Metric>

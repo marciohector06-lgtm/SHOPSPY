@@ -24,6 +24,11 @@ export const productsListQuerySchema = z.object({
     .default(20),
   category: z.enum(CATEGORIES).optional(),
   status: z.enum(PRODUCT_STATUSES).optional(),
+  // Aba de país/região de /produtos — sem valor = "Todas" (comportamento
+  // atual, sem filtro). Mesmos 5 grupos de regionalHeatmapQuerySchema, com
+  // BR a mais (lá o Brasil é a aba sem parâmetro; aqui precisa ser explícito
+  // porque o parâmetro ausente já significa "Todas").
+  region: z.enum(["BR", "LATAM", "ASIA", "EUROPE", "GLOBAL"]).optional(),
   // Busca livre por nome (ILIKE) — sem paginação por cursor, sempre no
   // máximo 20 resultados (ver createProductsRouter). 1-100 chars: vazio
   // não filtra nada, e um termo absurdamente longo não faz sentido numa

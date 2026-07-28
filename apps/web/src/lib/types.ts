@@ -1,4 +1,4 @@
-import type { Category, ProductStatus, ScoreClass } from "@shopspy/shared";
+import type { Category, ExternalIds, ProductStatus, ScoreClass } from "@shopspy/shared";
 
 // Espelham a resposta da API (apps/api) — de propósito não importamos
 // @shopspy/database aqui: o bundle do browser não deve carregar @prisma/client.
@@ -11,6 +11,8 @@ export interface Product {
   subcategory: string | null;
   imageUrl: string | null;
   status: ProductStatus;
+  /** IDs por plataforma de origem (Shopee, TikTok Shop, Amazon, AliExpress...) — de onde o produto foi coletado. */
+  externalIds?: ExternalIds;
 
   priceBR: number | null;
   commissionPctBR: number | null;

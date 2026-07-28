@@ -6,6 +6,26 @@ import { validate } from "../lib/validate";
 import { idParamSchema, productsListQuerySchema, type ProductsListQuery } from "../schemas";
 
 const SEARCH_MAX_RESULTS = 20;
+// Mesmo threshold usado pelo RegionFlags no frontend (apps/web/src/components/RegionFlags.tsx)
+// pra decidir se um score regional agregado é forte o suficiente pra "contar" nessa região.
+const REGION_SCORE_MIN = 30;
+
+function regionWhere(region: ProductsListQuery["region"]) {
+  switch (region) {
+    case "BR":
+      return { OR: [{ priceBR: { not: null } }, { soldCountBR: { not: null } }] };
+    case "GLOBAL":
+      return { OR: [{ priceUS: { not: null } }, { amazonRankUS: { not: null } }, { amazonRankUK: { not: null } }] };
+    case "LATAM":
+      return { latamScore: { gt: REGION_SCORE_MIN } };
+    case "ASIA":
+      return { asiaScore: { gt: REGION_SCORE_MIN } };
+    case "EUROPE":
+      return { europeScore: { gt: REGION_SCORE_MIN } };
+    default:
+      return {};
+  }
+}
 
 export function createProductsRouter(): Router {
   const router = Router();
@@ -21,7 +41,7 @@ export function createProductsRouter(): Router {
    */
   router.get("/", validate(productsListQuerySchema, "query"), async (req, res) => {
     const query = req.query as unknown as ProductsListQuery;
-    const cacheKey = `products:list:${query.category ?? "*"}:${query.status ?? "*"}:${query.q ?? "*"}:${query.cursor ?? "start"}:${query.limit}`;
+    const cacheKey = `products:list:${query.category ?? "*"}:${query.status ?? "*"}:${query.region ?? "*"}:${query.q ?? "*"}:${query.cursor ?? "start"}:${query.limit}`;
 
     const page = await withCache(res, cacheKey, 30, async () => {
       const rows = await prisma.product.findMany({
@@ -29,6 +49,7 @@ export function createProductsRouter(): Router {
           ...(query.category ? { category: query.category } : {}),
           ...(query.status ? { status: query.status } : {}),
           ...(query.q ? { name: { contains: query.q, mode: "insensitive" as const } } : {}),
+          ...regionWhere(query.region),
         },
         orderBy: { id: "asc" },
         take: query.q ? SEARCH_MAX_RESULTS : query.limit + 1,

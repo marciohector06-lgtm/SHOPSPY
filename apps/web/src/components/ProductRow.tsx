@@ -7,6 +7,7 @@ import { RankBadge } from "./RankBadge";
 import { ScoreBar } from "./ScoreBar";
 import { OpportunityBadge } from "./OpportunityBadge";
 import { WindowBadge } from "./WindowBadge";
+import { SourceBadges } from "./SourceBadges";
 
 export function ProductRow({ product, rank }: { product: ProductDetail; rank: number }) {
   const score = latestScore(product);
@@ -33,6 +34,9 @@ export function ProductRow({ product, rank }: { product: ProductDetail; rank: nu
       )}
       <div className="hidden shrink-0 md:block">
         <WindowBadge label={score?.windowLabel ?? null} />
+      </div>
+      <div className="hidden shrink-0 lg:block">
+        <SourceBadges externalIds={product.externalIds} />
       </div>
       <Link
         href={`/produto/${product.id}`}
