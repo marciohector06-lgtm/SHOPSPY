@@ -3,6 +3,7 @@ import { extractHook } from "../src/hook-extractor";
 import { generateUGCScript } from "../src/script-generator";
 import { analyzeOpportunity } from "../src/opportunity-analyst";
 import { translateProductNameToPT, findSemanticMatch } from "../src/keyword-normalizer";
+import { classifySubcategory } from "../src/subcategory-classifier";
 
 // Sem GEMINI_API_KEY configurada, todo caminho deve degradar para o fallback
 // de domínio em vez de lançar — essa é a garantia central da Fase 4
@@ -56,5 +57,15 @@ describe("fallbacks quando o Gemini está indisponível", () => {
   it("findSemanticMatch retorna -1 imediatamente para lista vazia (sem nem chamar o Gemini)", async () => {
     const result = await findSemanticMatch("Portable Neck Fan", []);
     expect(result).toBe(-1);
+  });
+
+  it("classifySubcategory retorna null", async () => {
+    const result = await classifySubcategory("Portable Neck Fan", "ELECTRONICS_GADGETS", ["Fones de ouvido", "Gadgets diversos"]);
+    expect(result).toBeNull();
+  });
+
+  it("classifySubcategory retorna null imediatamente para lista vazia (sem nem chamar o Gemini)", async () => {
+    const result = await classifySubcategory("Portable Neck Fan", "OTHER", []);
+    expect(result).toBeNull();
   });
 });

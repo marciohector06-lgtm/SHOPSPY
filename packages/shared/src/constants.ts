@@ -1,3 +1,5 @@
+import type { Category } from "./types";
+
 // Pesos do score principal (packages/scorer/src/engine.ts, Fase 5).
 // Devem somar 1.0 — coberto por teste em tests/unit/constants.test.ts.
 export const SCORE_WEIGHTS = {
@@ -86,3 +88,30 @@ export const EUROPE_REGION_WEIGHTS: Record<"FR" | "DE" | "IT", number> = {
 // Crescimento semana-a-semana (%) acima do qual um RegionalScore é marcado
 // como isExplosive (packages/scorer/src/explosive-detector.ts, Fase 5).
 export const EXPLOSIVE_GROWTH_THRESHOLD = 200;
+
+/**
+ * Subcategorias por categoria — 2º nível da taxonomia, PT-BR, pensado pro
+ * contexto de dropshipping/afiliado (mesmo espírito de CATEGORY_SEARCH_TERMS
+ * em packages/scrapers/src/shared/categoryMap.ts). Nenhum scraper sabe
+ * classificar nesse nível de detalhe — Product.subcategory é preenchido
+ * depois, pelo job SUBCATEGORY_CLASSIFIER (packages/queue/src/subcategoryClassifier.ts,
+ * via Gemini), escolhendo entre as opções daqui. Editar essa lista não exige
+ * migration — é só uma constante, igual as outras tabelas de categoria.
+ */
+export const SUBCATEGORIES: Record<Category, string[]> = {
+  BEAUTY_SKINCARE: ["Skincare facial", "Protetor solar", "Sérum e ácidos", "Hidratante corporal", "Ferramentas de beleza (rolo, LED)"],
+  MAKEUP: ["Base e corretivo", "Batom e lip tint", "Olhos (sombra/máscara)", "Pincéis e acessórios", "Unhas"],
+  HAIR_CARE: ["Shampoo e condicionador", "Óleos e finalizadores", "Ferramentas térmicas (chapinha/babyliss)", "Escovas e pentes", "Tratamentos capilares"],
+  FASHION_WOMEN: ["Vestidos", "Blusas e camisetas", "Calças e shorts", "Conjuntos", "Moda praia", "Lingerie e moda íntima"],
+  FASHION_MEN: ["Camisas e camisetas", "Calças e bermudas", "Jaquetas e moletons", "Roupa íntima", "Moda praia masculina"],
+  ACCESSORIES: ["Bijuterias e joias", "Óculos de sol", "Bolsas e carteiras", "Cintos", "Relógios"],
+  HOME_CLEANING: ["Produtos de limpeza", "Esponjas e panos", "Organizadores de limpeza", "Aspiradores e acessórios"],
+  HOME_ORGANIZATION: ["Organizadores de gaveta", "Caixas e cestos", "Cabides e arara", "Organizador de armário"],
+  HOME_DECOR: ["Iluminação e luminárias", "Quadros e posters", "Almofadas e mantas", "Vasos e plantas artificiais", "Aromatizadores"],
+  KITCHEN: ["Utensílios de cozinha", "Potes e organizadores", "Eletroportáteis", "Copos e garrafas térmicas"],
+  FITNESS: ["Acessórios de academia", "Roupa fitness", "Suporte e proteção", "Equipamentos de treino em casa"],
+  ELECTRONICS_GADGETS: ["Fones de ouvido", "Acessórios para celular", "Carregadores e cabos", "Smartwatch e wearables", "Gadgets diversos"],
+  SUPPLEMENTS: ["Vitaminas", "Proteínas e whey", "Emagrecedores", "Colágeno", "Termogênicos"],
+  PETS: ["Brinquedos para pet", "Acessórios (coleira/guia)", "Higiene e cuidados", "Alimentação e comedouros"],
+  OTHER: ["Diversos"],
+};

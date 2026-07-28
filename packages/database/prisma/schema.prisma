@@ -326,4 +326,5 @@ enum ScraperSource {
   GOOGLE_TRENDS_INTERNATIONAL
   EXPLOSIVE_DETECTOR // não é scraper de coleta, roda a cada 2h lendo RegionalScore.isExplosive
   BR_MATCHER // não é scraper de coleta, tenta achar equivalente BR pra produtos globais via Gemini
+  SUBCATEGORY_CLASSIFIER // não é scraper de coleta, classifica Product.subcategory via Gemini (packages/shared SUBCATEGORIES)
 }

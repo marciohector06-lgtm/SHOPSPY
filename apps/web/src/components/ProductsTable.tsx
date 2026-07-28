@@ -2,8 +2,8 @@
 
 import { useMemo, useState } from "react";
 import { useRouter } from "next/navigation";
-import type { Category, ScoreClass } from "@shopspy/shared";
-import { CATEGORIES, SCORE_CLASSES } from "@shopspy/shared";
+import type { ScoreClass } from "@shopspy/shared";
+import { SCORE_CLASSES, SUBCATEGORIES } from "@shopspy/shared";
 import type { ProductDetail } from "../lib/types";
 import { latestScore } from "../lib/product";
 import { ApiError, fetchProducts, type ProductRegion } from "../lib/api";
@@ -14,6 +14,7 @@ import { ScoreBar } from "./ScoreBar";
 import { OpportunityBadge, CLASSIFICATION_LABELS } from "./OpportunityBadge";
 import { WindowBadge } from "./WindowBadge";
 import { SourceBadges } from "./SourceBadges";
+import { CategoryTreePicker } from "./CategoryTreePicker";
 import { UGCScriptModal } from "./UGCScriptModal";
 import { EmptyState } from "./ui/EmptyState";
 import { ErrorState } from "./ui/ErrorState";
@@ -78,7 +79,7 @@ export function ProductsTable({ initialItems, initialCursor, region }: ProductsT
   const [loadingMore, setLoadingMore] = useState(false);
   const [loadMoreError, setLoadMoreError] = useState<string | null>(null);
 
-  const [category, setCategory] = useState<Category | "">("");
+  const [selectedSubcategories, setSelectedSubcategories] = useState<Set<string>>(new Set());
   const [classification, setClassification] = useState<ScoreClass | "">("");
   const [scoreMin, setScoreMin] = useState(0);
   const [search, setSearch] = useState("");
@@ -86,10 +87,25 @@ export function ProductsTable({ initialItems, initialCursor, region }: ProductsT
   const [sort, setSort] = useState<{ key: SortKey; direction: SortDirection }>({ key: "score", direction: "desc" });
   const [scriptProduct, setScriptProduct] = useState<ProductDetail | null>(null);
 
+  // Categorias com pelo menos 1 subcategoria marcada — produto dessa
+  // categoria ainda sem `subcategory` classificado (SUBCATEGORY_CLASSIFIER
+  // roda em lote, leva um tempo até cobrir o catálogo inteiro) continua
+  // aparecendo em vez de sumir do filtro por falta de classificação.
+  const categoriesWithSelection = useMemo(() => {
+    const set = new Set<string>();
+    for (const [cat, subs] of Object.entries(SUBCATEGORIES)) {
+      if (subs.some((s) => selectedSubcategories.has(s))) set.add(cat);
+    }
+    return set;
+  }, [selectedSubcategories]);
+
   const visibleItems = useMemo(() => {
     const searchLower = search.trim().toLowerCase();
     const filtered = items.filter((product) => {
-      if (category && product.category !== category) return false;
+      if (selectedSubcategories.size > 0) {
+        if (!categoriesWithSelection.has(product.category)) return false;
+        if (product.subcategory && !selectedSubcategories.has(product.subcategory)) return false;
+      }
       const score = latestScore(product);
       if (classification && score?.classification !== classification) return false;
       if (scoreMin > 0 && (score?.scoreTotal ?? 0) < scoreMin) return false;
@@ -105,7 +121,7 @@ export function ProductsTable({ initialItems, initialCursor, region }: ProductsT
       if (va > vb) return 1 * direction;
       return 0;
     });
-  }, [items, category, classification, scoreMin, search, sort]);
+  }, [items, selectedSubcategories, categoriesWithSelection, classification, scoreMin, search, sort]);
 
   function toggleSort(key: SortKey) {
     setSort((prev) => (prev.key === key ? { key, direction: prev.direction === "desc" ? "asc" : "desc" } : { key, direction: "desc" }));
@@ -129,18 +145,7 @@ export function ProductsTable({ initialItems, initialCursor, region }: ProductsT
   return (
     <div className="flex flex-col gap-4">
       <div className="sticky top-14 z-10 flex flex-wrap items-center gap-2 border-b border-spy-border bg-spy-base/95 py-3 backdrop-blur-xl">
-        <select
-          value={category}
-          onChange={(e) => setCategory(e.target.value as Category | "")}
-          className="h-11 rounded-md border border-spy-border bg-spy-surface px-2.5 text-xs text-spy-text"
-        >
-          <option value="">Categoria: todas</option>
-          {CATEGORIES.map((c) => (
-            <option key={c} value={c}>
-              {formatCategory(c)}
-            </option>
-          ))}
-        </select>
+        <CategoryTreePicker selected={selectedSubcategories} onChange={setSelectedSubcategories} />
 
         <select
           value={classification}

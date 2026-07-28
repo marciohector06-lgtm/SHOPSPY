@@ -10,6 +10,7 @@ export { publishStatus, STATUS_CHANNEL, type ScraperStatusMessage, type ScraperS
 export { computeBackoffDelay, MAX_ATTEMPTS, JOB_TIMEOUT_MS, MAX_CONCURRENT_SCRAPERS } from "./retryBackoff";
 export { runAlertChecker, type AlertCheckResult } from "./alertChecker";
 export { runScoreCalculator, type ScoreCalculatorResult } from "./scoreCalculator";
+export { runSubcategoryClassifier, type SubcategoryClassifierResult } from "./subcategoryClassifier";
 export {
   runExplosiveAlertChecker,
   detectExplosiveGrowth,

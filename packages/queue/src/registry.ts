@@ -27,6 +27,7 @@ import {
 import { runAlertChecker } from "./alertChecker";
 import { runScoreCalculator } from "./scoreCalculator";
 import { runExplosiveAlertChecker } from "./explosiveAlertChecker";
+import { runSubcategoryClassifier } from "./subcategoryClassifier";
 
 export type ScraperRunner = () => Promise<ScraperRunResult>;
 
@@ -72,6 +73,7 @@ export const SCRAPER_RUNNERS: Record<string, ScraperRunner> = {
   GOOGLE_TRENDS_INTERNATIONAL: runGoogleTrendsInternationalScraper,
   EXPLOSIVE_DETECTOR: runExplosiveAlertChecker,
   BR_MATCHER: matchProductsWithBR,
+  SUBCATEGORY_CLASSIFIER: runSubcategoryClassifier,
 };
 
 export function isKnownSource(source: string): boolean {

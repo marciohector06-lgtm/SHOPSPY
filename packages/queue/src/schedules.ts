@@ -33,6 +33,7 @@ export const SCHEDULES: ScheduleEntry[] = [
   { source: "VIDEO_COLLECTOR", cron: "0 9 * * *", phase: "processing" },
   { source: "OPPORTUNITY_AI", cron: "0 10 * * *", phase: "processing" },
   { source: "BR_MATCHER", cron: "30 10 * * *", phase: "processing" },
+  { source: "SUBCATEGORY_CLASSIFIER", cron: "0 11 * * *", phase: "processing" },
   { source: "ALERT_CHECKER", cron: "triggered", phase: "processing" }, // liberado quando SCORE_CALCULATOR termina (Fase 10)
 
   // ─── Manutenção ──────────────────────────────────────────────────────────

@@ -67,6 +67,7 @@ export const SCRAPER_SOURCES = [
   "GOOGLE_TRENDS_INTERNATIONAL",
   "EXPLOSIVE_DETECTOR",
   "BR_MATCHER",
+  "SUBCATEGORY_CLASSIFIER",
 ] as const;
 export type ScraperSource = (typeof SCRAPER_SOURCES)[number];
 

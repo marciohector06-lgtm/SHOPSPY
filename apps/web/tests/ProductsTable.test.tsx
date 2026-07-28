@@ -85,9 +85,12 @@ describe("<ProductsTable />", () => {
     expect(names[1]).toContain("Produto Baixo Score");
   });
 
-  it("filtra por categoria sem novo fetch", () => {
+  it("filtra por categoria (via CategoryTreePicker) sem novo fetch", () => {
     render(<ProductsTable initialItems={PRODUCTS} initialCursor={null} />);
-    fireEvent.change(screen.getByDisplayValue("Categoria: todas"), { target: { value: "PETS" } });
+    fireEvent.click(screen.getByRole("button", { name: /Categoria: todas/ }));
+    fireEvent.click(screen.getByRole("button", { name: /Pets/ }));
+    fireEvent.click(screen.getByLabelText("Selecionar todas"));
+
     const names = rowNames();
     expect(names).toHaveLength(1);
     expect(names[0]).toContain("Produto Baixo Score");
