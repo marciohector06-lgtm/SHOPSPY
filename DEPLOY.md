@@ -165,6 +165,7 @@ Cookies de sessão são `httpOnly` com `Domain` explícito (`COOKIE_DOMAIN`) —
 | `NEXT_PUBLIC_API_URL` | Vercel | URL pública da API |
 | `EXCHANGE_RATE_API_URL` | Railway (Worker) | fixo, já vem preenchido no `.env.example` |
 | `PUPPETEER_EXECUTABLE_PATH` | Railway (Worker) | `/run/current-system/sw/bin/chromium` — Chromium vem do `nixpacks.toml` (`nixPkgs`), necessário pros scrapers de TikTok (Shop BR/US e Creative Center) |
+| `TIKTOK_CREATIVE_SESSION_COOKIES` | Railway (Worker), opcional | Exportado de uma sessão logada em ads.tiktok.com/business (ver seção 11) — sem isso, `TIKTOK_CREATIVE_*` responde "invalid user" |
 | `ALIEXPRESS_APP_KEY` / `ALIEXPRESS_APP_SECRET` | Railway (Worker) | [portals.aliexpress.com/affiportals](https://portals.aliexpress.com/affiportals) |
 | `RESEND_API_KEY` | Railway (Worker) | Resend → API Keys (seção 4) |
 | `RESEND_FROM_EMAIL` | Railway (Worker) | domínio verificado no Resend, seção 4 |
@@ -196,7 +197,16 @@ npm run collect:tiktok:win   # Windows (CMD), sem precisar de bash
 
 Dispara `TIKTOK_SHOP_BR` e recalcula os scores (`SCORE_CALCULATOR`) direto em produção via `POST /internal/jobs/:source/trigger`. Rode uma vez por dia.
 
-**`TIKTOK_CREATIVE_*` (US + 11 países internacionais) fica de fora desse script de propósito** — não é bloqueio de IP: o TikTok Creative Center passou a exigir uma conta TikTok Business autenticada (a API interna dele devolve `"invalid user"` pra qualquer IP, residencial ou não, confirmado por inspeção de rede). Rodar da sua máquina não resolve isso. Fica registrado como limitação conhecida até haver uma conta TikTok Business disponível para autenticar (o que tem risco de flag/suspensão da conta, por ser automação contra os Termos do TikTok — decisão do dono da conta, não algo pra fazer sem confirmar).
+**`TIKTOK_CREATIVE_*` (US + 11 países internacionais) fica de fora desse script de propósito** — não é bloqueio de IP: o TikTok Creative Center passou a exigir uma conta TikTok Business autenticada (a API interna dele devolve `"invalid user"` pra qualquer IP, residencial ou não, confirmado por inspeção de rede). Rodar da sua máquina não resolve isso.
+
+**Se você decidir usar uma conta própria mesmo assim** (risco real de suspensão da conta — é automação contra os Termos do TikTok, decisão do dono da conta): `packages/scrapers/src/global/tiktok-creative-us.ts` (`scrapeTikTokCreativeRegions`) lê `TIKTOK_CREATIVE_SESSION_COOKIES` e injeta a sessão via `Page.setCookie` antes de abrir o Creative Center, em vez de simular login (menor sinal de automação que digitar usuário/senha). Passo a passo:
+
+1. Logue em `ads.tiktok.com/business` num navegador normal, com a conta que você aceita usar pra isso.
+2. Exporte os cookies desse domínio (extensão tipo "Cookie-Editor" já exporta no formato JSON que `Page.setCookie` espera).
+3. Cole o JSON na variável `TIKTOK_CREATIVE_SESSION_COOKIES` (seção 9) — no Worker do Railway, e localmente no seu `.env` se quiser testar com `collect-global.sh`.
+4. A sessão expira periodicamente (TikTok não documenta por quanto tempo) — quando `TIKTOK_CREATIVE_*` voltar a dar erro no `/api/v1/health`, repita os passos 1-3.
+
+Sem essa variável, o comportamento é o mesmo de hoje (erro "invalid user", sem quebrar o resto do ciclo).
 
 ### `collect-trends-international.bat` — `GOOGLE_TRENDS_INTERNATIONAL` + `EXPLOSIVE_DETECTOR` + `BR_MATCHER`, semanal ou quando quiser dados regionais frescos
 

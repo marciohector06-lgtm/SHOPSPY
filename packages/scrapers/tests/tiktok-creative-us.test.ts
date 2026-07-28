@@ -12,6 +12,7 @@ vi.mock("@shopspy/database", () => ({
 import {
   mapIndustryToCategory,
   normalizeCreativeCenterCard,
+  parseSessionCookies,
   persistReferenceVideos,
   type RawCreativeCenterCard,
 } from "../src/global/tiktok-creative-us";
@@ -59,6 +60,38 @@ describe("normalizeCreativeCenterCard", () => {
     const result = normalizeCreativeCenterCard(card, "UK");
     expect(result.tiktokImpressions).toBe(850_000);
     expect(result.tiktokCTR).toBeUndefined();
+  });
+});
+
+describe("parseSessionCookies", () => {
+  it("sem variável definida, retorna array vazio", () => {
+    expect(parseSessionCookies(undefined)).toEqual([]);
+  });
+
+  it("parseia um JSON array válido no formato do Cookie-Editor", () => {
+    const raw = JSON.stringify([
+      { name: "sessionid", value: "abc123", domain: ".tiktok.com", path: "/", secure: true },
+    ]);
+    expect(parseSessionCookies(raw)).toEqual([
+      { name: "sessionid", value: "abc123", domain: ".tiktok.com", path: "/", secure: true },
+    ]);
+  });
+
+  it("JSON inválido retorna array vazio (não derruba o scraper)", () => {
+    expect(parseSessionCookies("{ isso não é um array")).toEqual([]);
+  });
+
+  it("JSON válido mas não-array retorna array vazio", () => {
+    expect(parseSessionCookies(JSON.stringify({ name: "sessionid" }))).toEqual([]);
+  });
+
+  it("descarta entradas sem name/value/domain, mantém as válidas", () => {
+    const raw = JSON.stringify([
+      { name: "sessionid", value: "abc123", domain: ".tiktok.com" },
+      { name: "incompleto" },
+      "não é um objeto",
+    ]);
+    expect(parseSessionCookies(raw)).toEqual([{ name: "sessionid", value: "abc123", domain: ".tiktok.com" }]);
   });
 });
 

@@ -18,6 +18,38 @@ const REGIONS: Array<{ region: GlobalRegion; geo: string }> = [
 ];
 const MIN_DELAY_MS = 3000;
 
+export interface SessionCookie {
+  name: string;
+  value: string;
+  domain: string;
+  path?: string;
+  expires?: number;
+  httpOnly?: boolean;
+  secure?: boolean;
+  sameSite?: "Strict" | "Lax" | "None";
+}
+
+/**
+ * Lê TIKTOK_CREATIVE_SESSION_COOKIES (JSON array no formato exportado por
+ * extensões tipo "Cookie-Editor" — mesmo shape aceito por Page.setCookie).
+ * Sem essa variável, o Creative Center responde "invalid user" (exige login
+ * de conta Business desde meados de 2026) — ver nota de risco em
+ * scrapeTikTokCreativeRegions. Pura: recebe a string crua, sem process.env.
+ */
+export function parseSessionCookies(raw: string | undefined): SessionCookie[] {
+  if (!raw) return [];
+  try {
+    const parsed: unknown = JSON.parse(raw);
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter(
+      (c): c is SessionCookie =>
+        typeof c === "object" && c !== null && typeof c.name === "string" && typeof c.value === "string" && typeof c.domain === "string"
+    );
+  } catch {
+    return [];
+  }
+}
+
 export interface RawCreativeCenterCard {
   id: string;
   title: string;
@@ -139,6 +171,12 @@ export async function persistReferenceVideos(
  * ser compartilhado entre o runner US/UK/AU (3 regiões de uma vez) e cada
  * runner de país internacional (packages/scrapers/src/global/tiktok-creative-international.ts,
  * 1 região por chamada) sem duplicar a extração/normalização.
+ *
+ * AVISO: TIKTOK_CREATIVE_SESSION_COOKIES injeta a sessão de uma conta TikTok
+ * Business logada (o Creative Center passou a exigir login, "invalid user"
+ * sem isso). Automatizar acesso com uma conta autenticada viola os Termos de
+ * Uso do TikTok e a conta usada corre risco real de suspensão — decisão
+ * explícita do dono da conta (não do código), documentada em DEPLOY.md.
  */
 export async function scrapeTikTokCreativeRegions(
   regions: Array<{ region: GlobalRegion; geo: string }>
@@ -153,6 +191,16 @@ export async function scrapeTikTokCreativeRegions(
   try {
     const page = await browser.newPage();
     await page.setUserAgent(pickUserAgent());
+
+    const rawCookies = process.env.TIKTOK_CREATIVE_SESSION_COOKIES;
+    const cookies = parseSessionCookies(rawCookies);
+    if (cookies.length > 0) {
+      await page.setCookie(...cookies);
+    } else if (rawCookies) {
+      errors.push(
+        "TIKTOK_CREATIVE_SESSION_COOKIES definida mas ilegível (esperado um JSON array) — seguindo sem sessão, provável 'invalid user'"
+      );
+    }
 
     for (const { region, geo } of regions) {
       try {
