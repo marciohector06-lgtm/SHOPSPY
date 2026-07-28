@@ -2,11 +2,11 @@
 set -euo pipefail
 
 echo "================================================"
-echo "  ShopSpy — Coleta BR com IP Residencial"
+echo "  ShopSpy — Coleta BR com IP Residencial (produção)"
 echo "  $(date '+%d/%m/%Y %H:%M')"
 echo "================================================"
 
-API="http://localhost:4000"
+API="https://shopspy-production.up.railway.app"
 TOKEN="${INTERNAL_TOKEN:-shopspy-internal-token-2026}"
 
 trigger() {
@@ -22,12 +22,11 @@ trigger() {
   sleep "$WAIT"
 }
 
-echo "Verificando API local..."
+echo "Verificando API de produção..."
 HEALTH_BODY=$(curl -s "$API/api/v1/health")
 if ! echo "$HEALTH_BODY" | grep -q '"status":"ok"'; then
-  echo "ERRO: API não está respondendo com status ok em localhost:4000"
+  echo "ERRO: API de produção não respondeu com status ok"
   echo "Resposta: $HEALTH_BODY"
-  echo "Rode 'npm run dev' na pasta apps/api primeiro"
   exit 1
 fi
 echo "API OK!"
@@ -46,5 +45,5 @@ echo ""
 echo "================================================"
 echo "  Coleta BR concluída!"
 echo "  Abra o dashboard para ver os produtos BR"
-echo "  http://localhost:3000/explorar"
+echo "  https://shopspy-web.vercel.app/explorar"
 echo "================================================"

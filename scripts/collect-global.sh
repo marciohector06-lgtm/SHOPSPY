@@ -2,11 +2,11 @@
 set -euo pipefail
 
 echo "================================================"
-echo "  ShopSpy — Coleta Global"
+echo "  ShopSpy — Coleta Global (produção)"
 echo "  $(date '+%d/%m/%Y %H:%M')"
 echo "================================================"
 
-API="http://localhost:4000"
+API="https://shopspy-production.up.railway.app"
 TOKEN="${INTERNAL_TOKEN:-shopspy-internal-token-2026}"
 
 trigger() {
@@ -17,6 +17,15 @@ trigger() {
     -H "X-Internal-Token: $TOKEN" > /dev/null
   sleep "$WAIT"
 }
+
+echo "Verificando API de produção..."
+HEALTH_BODY=$(curl -s "$API/api/v1/health")
+if ! echo "$HEALTH_BODY" | grep -q '"status":"ok"'; then
+  echo "ERRO: API de produção não respondeu com status ok"
+  echo "Resposta: $HEALTH_BODY"
+  exit 1
+fi
+echo "API OK!"
 
 # Amazon (mais confiável, roda primeiro)
 trigger "AMAZON_US" 30
@@ -52,4 +61,8 @@ echo ">>> Calculando scores..."
 curl -s -X POST "$API/internal/jobs/SCORE_CALCULATOR/trigger" \
   -H "X-Internal-Token: $TOKEN" > /dev/null
 
-echo "Coleta global concluída!"
+echo ""
+echo "================================================"
+echo "  Coleta global concluída!"
+echo "  https://shopspy-web.vercel.app/explorar"
+echo "================================================"
