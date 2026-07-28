@@ -22,3 +22,29 @@ export const AMAZON_BESTSELLERS_SLUGS: Partial<Record<Category, string>> = {
   SUPPLEMENTS: "Best-Sellers-Health-Personal-Care/zgbs/hpc",
   PETS: "Best-Sellers-Pet-Supplies/zgbs/pet-supplies",
 };
+
+export interface AmazonSlugGroup {
+  slug: string;
+  /** Categoria "dona" do node — primeira categoria de AMAZON_BESTSELLERS_SLUGS mapeada pra esse slug. */
+  ownerCategory: Category;
+}
+
+/**
+ * Agrupa AMAZON_BESTSELLERS_SLUGS por slug único. Vários node de Best
+ * Sellers da Amazon são compartilhados por mais de uma Category (ex.:
+ * BEAUTY_SKINCARE/MAKEUP/HAIR_CARE caem todos em "beauty") — buscar e
+ * gravar o mesmo HTML uma vez por Category faria o mesmo produto virar
+ * uma linha por categoria (upsertProductFromGlobal dedupa por
+ * (nameNormalized, category), então categorias diferentes não colidem).
+ * Os scrapers da Amazon (US/UK) devem iterar esse resultado — um fetch +
+ * parse + upsert por slug único — em vez de Object.keys(AMAZON_BESTSELLERS_SLUGS).
+ */
+export function groupCategoriesBySlug(): AmazonSlugGroup[] {
+  const bySlug = new Map<string, Category>();
+  for (const [category, slug] of Object.entries(AMAZON_BESTSELLERS_SLUGS) as Array<[Category, string]>) {
+    if (!bySlug.has(slug)) {
+      bySlug.set(slug, category);
+    }
+  }
+  return [...bySlug.entries()].map(([slug, ownerCategory]) => ({ slug, ownerCategory }));
+}
