@@ -187,7 +187,7 @@ export async function scrapeTikTokCreativeRegions(
   let itemsUpdated = 0;
   const errors: string[] = [];
 
-  const browser = await puppeteer.launch({ headless: true });
+  const browser = await puppeteer.launch({ headless: true, args: ["--no-sandbox", "--disable-setuid-sandbox"] });
   try {
     const page = await browser.newPage();
     await page.setUserAgent(pickUserAgent());
